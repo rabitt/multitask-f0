@@ -8,6 +8,7 @@ import medleydb as mdb
 from medleydb import mix
 import numpy as np
 import os
+import scipy
 from scipy.signal import upfirdn
 from scipy.ndimage import filters
 import sox
@@ -280,28 +281,43 @@ def compute_bass(mtrack, save_dir, gaussian_blur, precomputed_hcqt):
         (stem.component == 'bass' \
             or 'electric bass' in stem.instrument \
             or 'double bass' in stem.instrument) \
-        and stem.f0_type == 'm'
+        and 'm' in stem.f0_type
     ]
+
     prefix = "{}_bass".format(mtrack.track_id)
+    
+    input_path = os.path.join(save_dir, 'inputs', "{}_input.npy".format(prefix))
+    output_path = os.path.join(save_dir, 'outputs', "{}_output.npy".format(prefix))
+    if os.path.exists(input_path) and os.path.exists(output_path):
+        print("    > {} already done!".format(mtrack.track_id))
+        return
+    
     if len(bass_stems) > 0:
         all_times = []
         all_freqs = []
-
+        print("     > {} Getting times and freqs...".format(mtrack.track_id))
         for bass_stem in bass_stems:
             bass_stem = bass_stems[0]
+            
+            if bass_stem.pitch_estimate_pyin is None:
+                continue
 
             annot = np.array(bass_stem.pitch_estimate_pyin).T
             annot_t = annot[0]
             annot_f = annot[1]
 
-            bass_activation = np.array(mtrack.activation_conf_from_stem(bass_stem.stem_idx)).T
+            bass_activation = np.array(mtrack.activation_conf_from_stem(bass_stem.stem_idx, version='v2')).T
             activation_interpolator = scipy.interpolate.interp1d(
-                bass_activation[0], bass_activation[1])
+                bass_activation[0], bass_activation[1], fill_value=0.0, bounds_error=False)
             activations = activation_interpolator(annot_t)
             annot_f[activations < 0.5] = 0.0
 
             all_times.append(annot_t)
             all_freqs.append(annot_f)
+
+            
+        if len(all_times) == 0:
+            return
 
         times = np.concatenate(all_times)
         freqs = np.concatenate(all_freqs)
@@ -311,9 +327,10 @@ def compute_bass(mtrack, save_dir, gaussian_blur, precomputed_hcqt):
         freqs = freqs[idx]
 
     else:
-        times = np.array([])
-        freqs = np.array([])
-
+        print("    {} No bass data".format(mtrack.track_id))
+        return
+    
+    print("     > {} Getting input/output pairs...".format(mtrack.track_id))
     X, Y, f, t = get_input_output_pairs(
         mtrack.mix_path, times, freqs, gaussian_blur,
         precomputed_hcqt
@@ -327,6 +344,13 @@ def compute_vocal(mtrack, save_dir, gaussian_blur, precomputed_hcqt):
         all([inst in VOCALS for inst in stem.instrument])
     ]
     prefix = "{}_vocal".format(mtrack.track_id)
+    
+    input_path = os.path.join(save_dir, 'inputs', "{}_input.npy".format(prefix))
+    output_path = os.path.join(save_dir, 'outputs', "{}_output.npy".format(prefix))
+    if os.path.exists(input_path) and os.path.exists(output_path):
+        print("    > {} already done!".format(mtrack.track_id))
+        return
+    
     if len(vocal_stems) > 0:
         all_times = []
         all_freqs = []
@@ -349,13 +373,16 @@ def compute_vocal(mtrack, save_dir, gaussian_blur, precomputed_hcqt):
 
             vocal_activation = np.array(mtrack.activation_conf_from_stem(vocal_stem.stem_idx)).T
             activation_interpolator = scipy.interpolate.interp1d(
-                vocal_activation[0], vocal_activation[1])
+                vocal_activation[0], vocal_activation[1], fill_value=0.0, bounds_error=False)
             activations = activation_interpolator(annot_t)
             annot_f[activations < 0.5] = 0.0
 
             all_times.append(annot_t)
             all_freqs.append(annot_f)
 
+        if len(all_times) == 0:
+            return
+            
         times = np.concatenate(all_times)
         freqs = np.concatenate(all_freqs)
 
@@ -364,8 +391,8 @@ def compute_vocal(mtrack, save_dir, gaussian_blur, precomputed_hcqt):
         freqs = freqs[idx]
 
     else:
-        times = np.array([])
-        freqs = np.array([])
+        print("    {} No vocal data".format(mtrack.track_id))
+        return
 
     X, Y, f, t = get_input_output_pairs(
         mtrack.mix_path, times, freqs, gaussian_blur,
@@ -571,7 +598,7 @@ def compute_multif0_complete(mtrack, save_dir, gaussian_blur):
 
 
 def compute_features_mtrack(mtrack, save_dir, option, gaussian_blur,
-                            precomputed_hcqt_path, ext='mel1'):
+                            precomputed_hcqt_path, ext='multif0_incomplete'):
     print(mtrack.track_id)
     if precomputed_hcqt_path != '':
         precomputed_hcqt = os.path.join(
