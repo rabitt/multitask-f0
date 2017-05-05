@@ -33,6 +33,10 @@ def train(model, model_save_path, dat_type):
         data_path = core.data_path_melody1()
     elif dat_type == 'pitch':
         data_path = core.data_path_pitch()
+    elif dat_type == 'bass':
+        data_path = core.data_path_bass()
+    elif dat_type == 'vocal':
+        data_path = core.data_path_vocal()
     else:
         raise ValueError("Invalid value for dat_type")
 
@@ -71,7 +75,7 @@ def train(model, model_save_path, dat_type):
     return model, history, dat
 
 
-def run_evaluation(exper_dir, save_key, history, dat, model):
+def run_evaluation_multif0(exper_dir, save_key, history, dat, model):
 
     (save_path, _, plot_save_path,
      model_scores_path, _, _
@@ -86,15 +90,39 @@ def run_evaluation(exper_dir, save_key, history, dat, model):
     evaluate.get_model_metrics(dat, model, model_scores_path)
 
     print("getting best threshold...")
-    thresh = evaluate.get_best_thresh(dat, model)
+    thresh = evaluate.get_best_thresh_multif0(dat, model)
+    with open(os.path.join(save_path, "best_thresh.json", 'w')) as fhandle:
+        json.dump({'best_thresh': thresh}, fhandle)
 
     print("scoring multif0 metrics on test sets...")
     print("    > bach10...")
-    evaluate.score_on_test_set('bach10', model, save_path, thresh)
+    evaluate.score_multif0_on_test_set('bach10', model, save_path, thresh)
     print("    > medleydb test...")
-    evaluate.score_on_test_set('mdb_test', model, save_path, thresh)
+    evaluate.score_multif0_on_test_set('mdb_test', model, save_path, thresh)
     print("    > su...")
-    evaluate.score_on_test_set('su', model, save_path, thresh)
+    evaluate.score_multif0_on_test_set('su', model, save_path, thresh)
+
+
+def run_evaluation_singlef0(exper_dir, save_key, history, dat, model):
+    (save_path, _, plot_save_path,
+     model_scores_path, _, _
+    ) = evaluate.get_paths(exper_dir, save_key)
+
+    ### Results plots ###
+    print("plotting results...")
+    evaluate.plot_metrics_epochs(history, plot_save_path)
+
+    ### Evaluate ###
+    print("getting model metrics...")
+    evaluate.get_model_metrics(dat, model, model_scores_path)
+
+    print("getting best threshold...")
+    thresh = evaluate.get_best_thresh_singlef0(dat, model)
+    with open(os.path.join(save_path, "best_thresh.json", 'w')) as fhandle:
+        json.dump({'best_thresh': thresh}, fhandle)
+
+    print("scoring multif0 metrics on test set...")
+    evaluate.score_singlef0_on_test_set(model, dat, save_path, thresh)
 
 
 def experiment(save_key, model, dat_type):
@@ -108,7 +136,7 @@ def experiment(save_key, model, dat_type):
 
     model, history, dat = train(model, model_save_path, dat_type)
 
-    run_evaluation(exper_dir, save_key, history, dat, model)
+    run_evaluation_multif0(exper_dir, save_key, history, dat, model)
 
     print("done!")
     print("Results saved to {}".format(save_path))

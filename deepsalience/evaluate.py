@@ -33,7 +33,7 @@ def save_multif0_output(times, freqs, output_path):
             csv_writer.writerow(row)
 
 
-def get_best_thresh(dat, model):
+def get_best_thresh_multif0(dat, model):
     """Use validation set to get the best threshold value
     """
 
@@ -43,22 +43,16 @@ def get_best_thresh(dat, model):
 
     thresh_vals = np.arange(0.1, 1.0, 0.1)
     thresh_scores = {t: [] for t in thresh_vals}
-    for npy_file, _ in validation_files:
-
-        file_keys = os.path.basename(npy_file).split('_')[:2]
-        label_file = glob.glob(
-            os.path.join(
-                test_set_path, 'mdb_test',
-                "{}*{}.txt".format(file_keys[0], file_keys[1]))
-        )[0]
+    for npy_file, target_file in validation_files:
 
         # generate prediction on numpy file
         predicted_output, input_hcqt = \
-            get_single_test_prediction(npy_file, model)
+            get_single_test_prediction(model, npy_file=npy_file)
 
         # load ground truth labels
+        target_output = np.load(target_file)
         ref_times, ref_freqs = \
-            mir_eval.io.load_ragged_time_series(label_file)
+            pitch_activations_to_mf0(target_output, 0.5)
 
         for thresh in thresh_vals:
             # get multif0 output from prediction
@@ -79,7 +73,63 @@ def get_best_thresh(dat, model):
     return best_thresh
 
 
-def score_on_test_set(test_set_name, model, save_path, thresh=0.5):
+def get_best_thresh_singlef0(dat, model):
+    thresh_vals = np.arange(0, 1, 0.1)
+    mel_accuracy = {v: [] for v in thresh_vals}
+
+    validation_files = dat.validation_files
+
+    for npy_file, target_file in validation_files:
+        # generate prediction on numpy file
+        predicted_output, input_hcqt = \
+            get_single_test_prediction(model, npy_file=npy_file)
+
+        target_output = np.load(target_file)
+        ref_times, ref_freqs = pitch_activations_to_singlef0(target_output, 0.5, use_neg=False)
+
+        for thresh in thresh_vals:
+            est_times, est_freqs = pitch_activations_to_singlef0(predicted_output, thresh)
+            mel_scores = mir_eval.melody.evaluate(ref_times, ref_freqs, est_times, est_freqs)
+            mel_accuracy[thresh].append(mel_scores['Overall Accuracy'])
+
+    avg_thresh = [np.mean(mel_accuracy[t]) for t in thresh_vals]
+    best_thresh = thresh_vals[np.argmax(avg_thresh)]
+    print("Best Threshold is {}".format(best_thresh))
+    print("Best validation accuracy is {}".format(np.max(avg_thresh)))
+    print("Validation accuracy at 0.5 is {}".format(np.mean(mel_accuracy[0.5])))
+
+    return best_thresh
+
+
+def score_singlef0_on_test_data(model, dat, save_path, thresh=0.5):
+    test_files = dat.test_files
+    all_scores
+    for npy_file, target_file in test_files:
+        # generate prediction on numpy file
+        predicted_output, input_hcqt = \
+            get_single_test_prediction(model, npy_file=npy_file)
+
+        target_output = np.load(target_file)
+        ref_times, ref_freqs = pitch_activations_to_singlef0(target_output, 0.5, use_neg=False)
+        est_times, est_freqs = pitch_activations_to_singlef0(predicted_output, thresh)
+        mel_scores = mir_eval.melody.evaluate(ref_times, ref_freqs, est_times, est_freqs)
+        scores['track'] = '_'.join(file_keys)
+        all_scores.append(scores)
+
+    # save scores to data frame
+    scores_path = os.path.join(
+        save_path, '{}_all_scores.csv'.format(test_set_name)
+    )
+    score_summary_path = os.path.join(
+        save_path, "{}_score_summary.csv".format(test_set_name)
+    )
+    df = pandas.DataFrame(all_scores)
+    df.to_csv(scores_path)
+    df.describe().to_csv(score_summary_path)
+    print(df.describe())
+
+
+def score_multif0_on_test_set(test_set_name, model, save_path, thresh=0.5):
     """score a model on all files in a named test set
     """
 
@@ -97,7 +147,7 @@ def score_on_test_set(test_set_name, model, save_path, thresh=0.5):
 
         # generate prediction on numpy file
         predicted_output, input_hcqt = \
-            get_single_test_prediction(npy_file, model)
+            get_single_test_prediction(model, npy_file=npy_file)
 
         # save plot for first example
         if len(all_scores) == 0:
@@ -264,7 +314,7 @@ def pitch_activations_to_mf0(pitch_activation_mat, thresh):
     return times, est_freqs
 
 
-def pitch_activations_to_singlef0(pitch_activation_mat, thresh):
+def pitch_activations_to_singlef0(pitch_activation_mat, thresh, use_neg=True):
     pitch_activation_mat = pitch_activation_mat/np.max(np.max(pitch_activation_mat))
     max_idx = np.argmax(pitch_activation_mat, axis=0)
     est_times = C.get_time_grid(pitch_activation_mat.shape[1])
@@ -272,23 +322,14 @@ def pitch_activations_to_singlef0(pitch_activation_mat, thresh):
     est_freqs = []
     for i, f in enumerate(max_idx):
         if pitch_activation_mat[f, i] < thresh:
-            est_freqs.append(-1.0*freq_grid[f])
+            if use_neg:
+                est_freqs.append(-1.0*freq_grid[f])
+            else:
+                est_freqs.append(0.0)
         else:
             est_freqs.append(freq_grid[f])
     est_freqs = np.array(est_freqs)
     return est_times, est_freqs
-
-
-# def compute_metrics(predicted_mat, true_mat):
-#     """Score two pitch activation maps (predictions against ground truth)
-#     """
-#     ref_times, ref_freqs = pitch_activations_to_mf0(true_mat, 1)
-#     est_times, est_freqs = pitch_activations_to_mf0(predicted_mat, 0.5)
-
-#     scores = mir_eval.multipitch.evaluate(
-#         ref_times, ref_freqs, est_times, est_freqs
-#     )
-#     return scores
 
 
 def get_single_test_prediction(model, npy_file=None, audio_file=None):
