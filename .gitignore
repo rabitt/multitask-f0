@@ -1,3 +1,4 @@
+*.out
 *.npy
 *.wav
 *.DS_Store

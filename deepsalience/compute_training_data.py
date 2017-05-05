@@ -282,6 +282,7 @@ def compute_bass(mtrack, save_dir, gaussian_blur, precomputed_hcqt):
             or 'double bass' in stem.instrument) \
         and stem.f0_type == 'm'
     ]
+    prefix = "{}_bass".format(mtrack.track_id)
     if len(bass_stems) > 0:
         all_times = []
         all_freqs = []
@@ -325,6 +326,7 @@ def compute_vocal(mtrack, save_dir, gaussian_blur, precomputed_hcqt):
         stem for stem in mtrack.stems.values() if \
         all([inst in VOCALS for inst in stem.instrument])
     ]
+    prefix = "{}_vocal".format(mtrack.track_id)
     if len(vocal_stems) > 0:
         all_times = []
         all_freqs = []
