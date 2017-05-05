@@ -264,6 +264,21 @@ def pitch_activations_to_mf0(pitch_activation_mat, thresh):
     return times, est_freqs
 
 
+def pitch_activations_to_singlef0(pitch_activation_mat, thresh):
+    pitch_activation_mat = pitch_activation_mat/np.max(np.max(pitch_activation_mat))
+    max_idx = np.argmax(pitch_activation_mat, axis=0)
+    est_times = C.get_time_grid(pitch_activation_mat.shape[1])
+    freq_grid = C.get_freq_grid()
+    est_freqs = []
+    for i, f in enumerate(max_idx):
+        if pitch_activation_mat[f, i] < thresh:
+            est_freqs.append(-1.0*freq_grid[f])
+        else:
+            est_freqs.append(freq_grid[f])
+    est_freqs = np.array(est_freqs)
+    return est_times, est_freqs
+
+
 # def compute_metrics(predicted_mat, true_mat):
 #     """Score two pitch activation maps (predictions against ground truth)
 #     """
