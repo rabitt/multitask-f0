@@ -341,7 +341,7 @@ def compute_bass(mtrack, save_dir, gaussian_blur, precomputed_hcqt):
 def compute_vocal(mtrack, save_dir, gaussian_blur, precomputed_hcqt):
     vocal_stems = [
         stem for stem in mtrack.stems.values() if \
-        all([inst in VOCALS for inst in stem.instrument])
+        all([inst in mix.VOCALS for inst in stem.instrument])
     ]
     prefix = "{}_vocal".format(mtrack.track_id)
     
@@ -371,7 +371,7 @@ def compute_vocal(mtrack, save_dir, gaussian_blur, precomputed_hcqt):
             annot_t = annot[0]
             annot_f = annot[1]
 
-            vocal_activation = np.array(mtrack.activation_conf_from_stem(vocal_stem.stem_idx)).T
+            vocal_activation = np.array(mtrack.activation_conf_from_stem(vocal_stem.stem_idx, version='v2')).T
             activation_interpolator = scipy.interpolate.interp1d(
                 vocal_activation[0], vocal_activation[1], fill_value=0.0, bounds_error=False)
             activations = activation_interpolator(annot_t)
@@ -611,6 +611,8 @@ def compute_features_mtrack(mtrack, save_dir, option, gaussian_blur,
         compute_solo_pitch(mtrack, save_dir, gaussian_blur)
     elif option == 'bass':
         compute_bass(mtrack, save_dir, gaussian_blur, precomputed_hcqt)
+    elif option == 'vocal':
+        compute_vocal(mtrack, save_dir, gaussian_blur, precomputed_hcqt)
     elif option == 'melody1':
         compute_melody1(mtrack, save_dir, gaussian_blur, precomputed_hcqt)
     elif option == 'melody2':

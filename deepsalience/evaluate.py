@@ -32,7 +32,16 @@ def save_multif0_output(times, freqs, output_path):
             row.extend(f)
             csv_writer.writerow(row)
 
+            
+def save_singlef0_output(times, freqs, output_path):
+    """save multif0 output to a csv file
+    """
+    with open(output_path, 'w') as fhandle:
+        csv_writer = csv.writer(fhandle, delimiter='\t')
+        for t, f in zip(times, freqs):
+            csv_writer.writerow([t, f])
 
+            
 def get_best_thresh_multif0(dat, model):
     """Use validation set to get the best threshold value
     """
@@ -103,20 +112,70 @@ def get_best_thresh_singlef0(dat, model):
 
 def score_singlef0_on_test_data(model, dat, save_path, thresh=0.5):
     test_files = dat.test_files
-    all_scores
+    all_scores = []
     for npy_file, target_file in test_files:
+        print(npy_file)
         # generate prediction on numpy file
         predicted_output, input_hcqt = \
             get_single_test_prediction(model, npy_file=npy_file)
-
         target_output = np.load(target_file)
+        file_keys = os.path.basename(npy_file).split('.')[0]
+        
+        # save plot for first example
+
+        plot_save_path = os.path.join(
+            save_path,
+            "{}_plot_output.pdf".format(file_keys)
+        )
+
+        plt.figure(figsize=(15, 15))
+
+        plt.subplot(3, 1, 1)
+        plt.imshow(input_hcqt[0, :, :, 1], origin='lower')
+        plt.axis('auto')
+        plt.colorbar()
+
+        plt.subplot(3, 1, 2)
+        plt.imshow(predicted_output, origin='lower')
+        plt.axis('auto')
+        plt.colorbar()
+
+        plt.subplot(3, 1, 3)
+        plt.imshow(target_output, origin='lower')
+        plt.axis('auto')
+        plt.colorbar()
+            
+        plt.savefig(plot_save_path, format='pdf')
+        plt.close()
+
+        # save prediction
+        np.save(
+            os.path.join(
+                save_path,
+                "{}_prediction.npy".format(file_keys)
+            ),
+            predicted_output.astype(np.float32)
+        )
+        
         ref_times, ref_freqs = pitch_activations_to_singlef0(target_output, 0.5, use_neg=False)
         est_times, est_freqs = pitch_activations_to_singlef0(predicted_output, thresh)
         mel_scores = mir_eval.melody.evaluate(ref_times, ref_freqs, est_times, est_freqs)
-        scores['track'] = '_'.join(file_keys)
-        all_scores.append(scores)
+        
+        mel_scores['track'] = '_'.join(file_keys)
+        all_scores.append(mel_scores)
+
+        # save multif0 output
+        save_singlef0_output(
+            list(est_times), list(est_freqs),
+            os.path.join(
+                save_path,
+                "{}_prediction.txt".format(file_keys)
+            )
+        )        
+
 
     # save scores to data frame
+    test_set_name = 'mdb_test'
     scores_path = os.path.join(
         save_path, '{}_all_scores.csv'.format(test_set_name)
     )

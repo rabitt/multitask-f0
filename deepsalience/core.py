@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 np.random.seed(1337)
+import json
 import keras
 from keras import backend as K
 import pescador
@@ -193,10 +194,9 @@ def get_file_paths(mtrack_list, data_path):
             )
         )
 
-        if len(input_path) == 1 and len(output_path) == 1:
-            input_path = input_path[0]
-            output_path = output_path[0]
-            file_paths.append((input_path, output_path))
+        if len(input_path) == len(output_path) and len(output_path) > 0:
+            for in_path, out_path in zip(input_path, output_path):
+                file_paths.append((in_path, out_path))
 
     return file_paths
 
