@@ -7,7 +7,7 @@ from keras.layers.normalization import BatchNormalization
 from keras import backend as K
 import os
 
-import experiment
+import experiment_datasets
 
 def model_def():
     ### DEFINE MODEL ###
