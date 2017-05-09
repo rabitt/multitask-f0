@@ -193,7 +193,7 @@ def get_file_paths(mtrack_list, data_path):
                 os.path.basename(input_path).split('.')[0].split('_')[:-1]
             )
             output_path = os.path.join(
-                data_path, 'outputs', "{}*_output.npy".format(input_basename))
+                data_path, 'outputs', "{}_output.npy".format(input_basename))
             if os.path.exists(output_path):
                 file_paths.append((input_path, output_path))
 
