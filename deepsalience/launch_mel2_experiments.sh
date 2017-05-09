@@ -1,8 +1,7 @@
 for file in mel2_exper*.py; do
-echo
-"#!/bin/bash
+echo "#!/bin/bash
 #
-#SBATCH --job-name=e12
+#SBATCH --job-name=${file/.py/}
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
