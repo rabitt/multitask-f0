@@ -125,7 +125,7 @@ def run_evaluation_singlef0(exper_dir, save_key, history, dat, model):
     evaluate.score_singlef0_on_test_set(model, dat, save_path, thresh)
 
 
-def experiment(save_key, model, dat_type):
+def experiment(save_key, model, dat_type, eval_type=None):
     """common code for all experiments
     """
     exper_dir = core.experiment_output_path()
@@ -136,9 +136,17 @@ def experiment(save_key, model, dat_type):
 
     model, history, dat = train(model, model_save_path, dat_type)
 
-    run_evaluation_multif0(exper_dir, save_key, history, dat, model)
+    if eval_type == None:
+        if dat_type in ['multif0_complete', 'multif0_incomplete', 'melody3']:
+            eval_type = 'multif0'
+        else:
+            eval_type = 'singlef0'
+
+    if eval_type == 'multif0':
+        run_evaluation_multif0(exper_dir, save_key, history, dat, model)
+    elif eval_type == 'singlef0':
+        run_evaluation_singlef0(exper_dir, save_key, history, dat, model)
 
     print("done!")
     print("Results saved to {}".format(save_path))
-
 
