@@ -40,12 +40,12 @@ def train(model, model_save_path, dat_type):
     else:
         raise ValueError("Invalid value for dat_type")
 
-    mtrack_list = core.track_id_list()
+    data_splits_path = core.data_splits_path()
     input_patch_size = core.patch_size()
 
     ### DATA SETUP ###
     dat = core.Data(
-        mtrack_list, data_path, input_patch_size=input_patch_size
+        data_splits_path, data_path, input_patch_size=input_patch_size
     )
     train_generator = dat.get_train_generator()
     validation_generator = dat.get_validation_generator()

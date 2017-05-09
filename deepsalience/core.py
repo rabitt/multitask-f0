@@ -22,6 +22,10 @@ def patch_size():
     return (360, 50)
 
 
+def data_splits_path():
+    return "/scratch/rmb456/multif0/outputs/data_splits.json"
+
+
 def experiment_output_path():
     return "/scratch/rmb456/multif0/experiment_output"
 
