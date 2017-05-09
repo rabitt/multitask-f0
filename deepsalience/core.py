@@ -185,23 +185,24 @@ def get_file_paths(mtrack_list, data_path):
     """
     file_paths = []
     for track_id in mtrack_list:
-        input_path = glob.glob(
+        input_paths = glob.glob(
             os.path.join(data_path, 'inputs', "{}*_input.npy".format(track_id))
         )
-        output_path = glob.glob(
-            os.path.join(
-                data_path, 'outputs', "{}*_output.npy".format(track_id)
+        for input_path in input_paths:
+            input_basename = '_'.join(
+                os.path.basename(input_path).split('.')[0].split('_')[:-1]
             )
-        )
-
-        if len(input_path) == len(output_path) and len(output_path) > 0:
-            for in_path, out_path in zip(input_path, output_path):
-                file_paths.append((in_path, out_path))
+            output_path = os.path.join(
+                data_path, 'outputs', "{}*_output.npy".format(input_basename))
+            if os.path.exists(output_path):
+                file_paths.append((input_path, output_path))
 
     return file_paths
 
 
 def create_data_split(mtrack_list, output_path):
+    """Save a given data split to the output path.
+    """
     mtracks = list(mdb.load_multitracks(mtrack_list))
     test_potentials = [
         m.track_id for m in mtracks if m.dataset_version == 'V1'
