@@ -7,6 +7,7 @@ print(device_lib.list_local_devices())
 
 import numpy as np
 np.random.seed(1337)
+import json
 import keras
 import medleydb as mdb
 import os
@@ -15,8 +16,8 @@ import core
 import evaluate
 
 SAMPLES_PER_EPOCH = 256
-NB_EPOCHS = 50
-NB_VAL_SAMPLES = 512
+NB_EPOCHS = 40
+NB_VAL_SAMPLES = 256
 
 
 def train(model, model_save_path, dat_type):
@@ -118,7 +119,7 @@ def run_evaluation_singlef0(exper_dir, save_key, history, dat, model):
 
     print("getting best threshold...")
     thresh = evaluate.get_best_thresh_singlef0(dat, model)
-    with open(os.path.join(save_path, "best_thresh.json", 'w')) as fhandle:
+    with open(os.path.join(save_path, "best_thresh.json"), 'w') as fhandle:
         json.dump({'best_thresh': thresh}, fhandle)
 
     print("scoring multif0 metrics on test set...")

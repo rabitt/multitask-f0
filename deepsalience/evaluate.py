@@ -89,6 +89,7 @@ def get_best_thresh_singlef0(dat, model):
     validation_files = dat.validation_files
 
     for npy_file, target_file in validation_files:
+        print(npy_file)
         # generate prediction on numpy file
         predicted_output, input_hcqt = \
             get_single_test_prediction(model, npy_file=npy_file)
@@ -97,6 +98,7 @@ def get_best_thresh_singlef0(dat, model):
         ref_times, ref_freqs = pitch_activations_to_singlef0(target_output, 0.5, use_neg=False)
 
         for thresh in thresh_vals:
+            print("   {}".format(thresh))
             est_times, est_freqs = pitch_activations_to_singlef0(predicted_output, thresh)
             mel_scores = mir_eval.melody.evaluate(ref_times, ref_freqs, est_times, est_freqs)
             mel_accuracy[thresh].append(mel_scores['Overall Accuracy'])
@@ -110,7 +112,7 @@ def get_best_thresh_singlef0(dat, model):
     return best_thresh
 
 
-def score_singlef0_on_test_data(model, dat, save_path, thresh=0.5):
+def score_singlef0_on_test_set(model, dat, save_path, thresh=0.5):
     test_files = dat.test_files
     all_scores = []
     for npy_file, target_file in test_files:

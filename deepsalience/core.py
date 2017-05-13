@@ -137,7 +137,7 @@ def keras_generator(data_list, input_patch_size):
         random_state=RANDOM_STATE
     )
 
-    batch_generator = pescador.BufferedStreamer(stream_mux, 16)
+    batch_generator = pescador.BufferedStreamer(stream_mux, 8)
 
     for batch in batch_generator.tuples('X', 'Y'):
         yield batch
