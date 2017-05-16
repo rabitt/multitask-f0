@@ -181,7 +181,7 @@ def patch_generator(fpath_in, fpath_out, input_patch_size, n_harms=None):
         )
 
         if n_harms in [1, 2, 3, 4, 5]:
-            x = x[:, 1:n_harms + 1, :, :]
+            x = x[:, :, :, 1:n_harms + 1]
 
         y = grab_patch_output(
             f, t, n_f, n_t, data_out
