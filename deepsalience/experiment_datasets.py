@@ -93,7 +93,7 @@ def run_evaluation_multif0(exper_dir, save_key, history, dat, model, n_harms=Non
 
     print("getting best threshold...")
     thresh = evaluate.get_best_thresh_multif0(dat, model, n_harms=n_harms)
-    with open(os.path.join(save_path, "best_thresh.json", 'w')) as fhandle:
+    with open(os.path.join(save_path, "best_thresh.json"), 'w') as fhandle:
         json.dump({'best_thresh': thresh}, fhandle)
 
     print("scoring multif0 metrics on test sets...")
