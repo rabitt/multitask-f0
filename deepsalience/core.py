@@ -120,7 +120,7 @@ def soft_binary_accuracy(y_true, y_pred):
         K.equal(K.round(y_true), K.round(y_pred)), axis=-1), axis=-1)
 
 
-def keras_generator(data_list, input_patch_size):
+def keras_generator(data_list, input_patch_size, n_harms=None):
     """Generator to be passed to a keras model
     """
     streams = []
@@ -128,7 +128,8 @@ def keras_generator(data_list, input_patch_size):
         streams.append(
             pescador.Streamer(
                 patch_generator, fpath_in, fpath_out,
-                input_patch_size=input_patch_size
+                input_patch_size=input_patch_size,
+                n_harms=n_harms
             )
         )
 
@@ -157,10 +158,11 @@ def grab_patch_input(f, t, n_f, n_t, x_data):
     )[np.newaxis, :, :, :]
 
 
-def patch_generator(fpath_in, fpath_out, input_patch_size):
+def patch_generator(fpath_in, fpath_out, input_patch_size, n_harms=None):
     """Generator that yields an infinite number of patches
        for a single input, output pair
     """
+
     data_in = np.load(fpath_in)
     data_out = np.load(fpath_out)
 
@@ -177,6 +179,10 @@ def patch_generator(fpath_in, fpath_out, input_patch_size):
         x = grab_patch_input(
             f, t, n_f, n_t, data_in
         )
+
+        if n_harms in [1, 2, 3, 4, 5]:
+            x = x[:, 1:n_harms + 1, :, :]
+
         y = grab_patch_output(
             f, t, n_f, n_t, data_out
         )
@@ -244,10 +250,11 @@ def create_data_split(mtrack_list, output_path):
 class Data(object):
     """Class that deals with all the data mess
     """
-    def __init__(self, data_splits_path, data_path, input_patch_size):
+    def __init__(self, data_splits_path, data_path, input_patch_size, n_harms=None):
 
         self.data_splits_path = data_splits_path
         self.input_patch_size = input_patch_size
+        self.n_harms = n_harms
 
         self.data_path = data_path
 
@@ -274,7 +281,8 @@ class Data(object):
         """
         return keras_generator(
             self.train_files,
-            input_patch_size=self.input_patch_size
+            input_patch_size=self.input_patch_size,
+            n_harms=self.n_harms
         )
 
     def get_validation_generator(self):
@@ -282,7 +290,8 @@ class Data(object):
         """
         return keras_generator(
             self.validation_files,
-            input_patch_size=self.input_patch_size
+            input_patch_size=self.input_patch_size,
+            n_harms=self.n_harms
         )
 
     def get_test_generator(self):
@@ -290,6 +299,7 @@ class Data(object):
         """
         return keras_generator(
             self.test_files,
-            input_patch_size=self.input_patch_size
+            input_patch_size=self.input_patch_size,
+            n_harms=self.n_harms
         )
 

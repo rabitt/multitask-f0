@@ -42,7 +42,7 @@ def save_singlef0_output(times, freqs, output_path):
             csv_writer.writerow([t, f])
 
             
-def get_best_thresh_multif0(dat, model):
+def get_best_thresh_multif0(dat, model, n_harms=None):
     """Use validation set to get the best threshold value
     """
 
@@ -56,7 +56,7 @@ def get_best_thresh_multif0(dat, model):
 
         # generate prediction on numpy file
         predicted_output, input_hcqt = \
-            get_single_test_prediction(model, npy_file=npy_file)
+            get_single_test_prediction(model, npy_file=npy_file, n_harms=n_harms)
 
         # load ground truth labels
         target_output = np.load(target_file)
@@ -82,7 +82,7 @@ def get_best_thresh_multif0(dat, model):
     return best_thresh
 
 
-def get_best_thresh_singlef0(dat, model):
+def get_best_thresh_singlef0(dat, model, n_harms=None):
     thresh_vals = np.arange(0, 1, 0.1)
     mel_accuracy = {v: [] for v in thresh_vals}
 
@@ -92,7 +92,7 @@ def get_best_thresh_singlef0(dat, model):
         print(npy_file)
         # generate prediction on numpy file
         predicted_output, input_hcqt = \
-            get_single_test_prediction(model, npy_file=npy_file)
+            get_single_test_prediction(model, npy_file=npy_file, n_harms=n_harms)
 
         target_output = np.load(target_file)
         ref_times, ref_freqs = pitch_activations_to_singlef0(target_output, 0.5, use_neg=False)
@@ -112,14 +112,14 @@ def get_best_thresh_singlef0(dat, model):
     return best_thresh
 
 
-def score_singlef0_on_test_set(model, dat, save_path, thresh=0.5):
+def score_singlef0_on_test_set(model, dat, save_path, thresh=0.5, n_harms=None):
     test_files = dat.test_files
     all_scores = []
     for npy_file, target_file in test_files:
         print(npy_file)
         # generate prediction on numpy file
         predicted_output, input_hcqt = \
-            get_single_test_prediction(model, npy_file=npy_file)
+            get_single_test_prediction(model, npy_file=npy_file, n_harms=n_harms)
         target_output = np.load(target_file)
         file_keys = os.path.basename(npy_file).split('.')[0]
         
@@ -190,7 +190,7 @@ def score_singlef0_on_test_set(model, dat, save_path, thresh=0.5):
     print(df.describe())
 
 
-def score_multif0_on_test_set(test_set_name, model, save_path, thresh=0.5):
+def score_multif0_on_test_set(test_set_name, model, save_path, thresh=0.5, n_harms=None):
     """score a model on all files in a named test set
     """
 
@@ -208,7 +208,7 @@ def score_multif0_on_test_set(test_set_name, model, save_path, thresh=0.5):
 
         # generate prediction on numpy file
         predicted_output, input_hcqt = \
-            get_single_test_prediction(model, npy_file=npy_file)
+            get_single_test_prediction(model, npy_file=npy_file, n_harms=n_harms)
 
         # save plot for first example
         if len(all_scores) == 0:
@@ -393,7 +393,7 @@ def pitch_activations_to_singlef0(pitch_activation_mat, thresh, use_neg=True):
     return est_times, est_freqs
 
 
-def get_single_test_prediction(model, npy_file=None, audio_file=None):
+def get_single_test_prediction(model, npy_file=None, audio_file=None, n_harms=None):
     """Generate output from a model given an input numpy file
     """
     if npy_file is not None:
@@ -402,6 +402,9 @@ def get_single_test_prediction(model, npy_file=None, audio_file=None):
         input_hcqt = (C.compute_hcqt(audio_file)).astype(np.float32)
     else:
         raise ValueError("one of npy_file or audio_file must be specified")
+
+    if n_harms in [1, 2, 3, 4, 5]:
+        input_hcqt = input_hcqt[1:n_harms + 1, :, :]
 
     input_hcqt = input_hcqt.transpose(1, 2, 0)[np.newaxis, :, :, :]
 

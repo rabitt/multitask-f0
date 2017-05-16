@@ -20,7 +20,7 @@ NB_EPOCHS = 40
 NB_VAL_SAMPLES = 256
 
 
-def train(model, model_save_path, dat_type):
+def train(model, model_save_path, dat_type, n_harms=None):
 
     if dat_type == 'multif0_complete':
         data_path = core.data_path_multif0_complete()
@@ -46,7 +46,8 @@ def train(model, model_save_path, dat_type):
 
     ### DATA SETUP ###
     dat = core.Data(
-        data_splits_path, data_path, input_patch_size=input_patch_size
+        data_splits_path, data_path, input_patch_size=input_patch_size,
+        n_harms=n_harms
     )
     train_generator = dat.get_train_generator()
     validation_generator = dat.get_validation_generator()
@@ -76,7 +77,7 @@ def train(model, model_save_path, dat_type):
     return model, history, dat
 
 
-def run_evaluation_multif0(exper_dir, save_key, history, dat, model):
+def run_evaluation_multif0(exper_dir, save_key, history, dat, model, n_harms=None):
 
     (save_path, _, plot_save_path,
      model_scores_path, _, _
@@ -91,20 +92,23 @@ def run_evaluation_multif0(exper_dir, save_key, history, dat, model):
     evaluate.get_model_metrics(dat, model, model_scores_path)
 
     print("getting best threshold...")
-    thresh = evaluate.get_best_thresh_multif0(dat, model)
+    thresh = evaluate.get_best_thresh_multif0(dat, model, n_harms=n_harms)
     with open(os.path.join(save_path, "best_thresh.json", 'w')) as fhandle:
         json.dump({'best_thresh': thresh}, fhandle)
 
     print("scoring multif0 metrics on test sets...")
     print("    > bach10...")
-    evaluate.score_multif0_on_test_set('bach10', model, save_path, thresh)
+    evaluate.score_multif0_on_test_set(
+        'bach10', model, save_path, thresh, n_harms=n_harms)
     print("    > medleydb test...")
-    evaluate.score_multif0_on_test_set('mdb_test', model, save_path, thresh)
+    evaluate.score_multif0_on_test_set(
+        'mdb_test', model, save_path, thresh, n_harms=n_harms)
     print("    > su...")
-    evaluate.score_multif0_on_test_set('su', model, save_path, thresh)
+    evaluate.score_multif0_on_test_set(
+        'su', model, save_path, thresh, n_harms=n_harms)
 
 
-def run_evaluation_singlef0(exper_dir, save_key, history, dat, model):
+def run_evaluation_singlef0(exper_dir, save_key, history, dat, model, n_harms=None):
     (save_path, _, plot_save_path,
      model_scores_path, _, _
     ) = evaluate.get_paths(exper_dir, save_key)
@@ -118,15 +122,16 @@ def run_evaluation_singlef0(exper_dir, save_key, history, dat, model):
     evaluate.get_model_metrics(dat, model, model_scores_path)
 
     print("getting best threshold...")
-    thresh = evaluate.get_best_thresh_singlef0(dat, model)
+    thresh = evaluate.get_best_thresh_singlef0(dat, model, n_harms=n_harms)
     with open(os.path.join(save_path, "best_thresh.json"), 'w') as fhandle:
         json.dump({'best_thresh': thresh}, fhandle)
 
     print("scoring multif0 metrics on test set...")
-    evaluate.score_singlef0_on_test_set(model, dat, save_path, thresh)
+    evaluate.score_singlef0_on_test_set(
+        model, dat, save_path, thresh, n_harms=n_harms)
 
 
-def experiment(save_key, model, dat_type, eval_type=None):
+def experiment(save_key, model, dat_type, eval_type=None, n_harms=None):
     """common code for all experiments
     """
     exper_dir = core.experiment_output_path()
@@ -135,7 +140,8 @@ def experiment(save_key, model, dat_type, eval_type=None):
         exper_dir, save_key
     )
 
-    model, history, dat = train(model, model_save_path, dat_type)
+    model, history, dat = train(
+        model, model_save_path, dat_type, n_harms=n_harms)
 
     if eval_type == None:
         if dat_type in ['multif0_complete', 'multif0_incomplete', 'melody3']:
@@ -144,9 +150,11 @@ def experiment(save_key, model, dat_type, eval_type=None):
             eval_type = 'singlef0'
 
     if eval_type == 'multif0':
-        run_evaluation_multif0(exper_dir, save_key, history, dat, model)
+        run_evaluation_multif0(
+            exper_dir, save_key, history, dat, model, n_harms=n_harms)
     elif eval_type == 'singlef0':
-        run_evaluation_singlef0(exper_dir, save_key, history, dat, model)
+        run_evaluation_singlef0(
+            exper_dir, save_key, history, dat, model, n_harms=n_harms)
 
     print("done!")
     print("Results saved to {}".format(save_path))
