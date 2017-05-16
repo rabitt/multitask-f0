@@ -201,9 +201,9 @@ def score_multif0_on_test_set(test_set_name, model, save_path, thresh=0.5, n_har
     all_scores = []
     for npy_file in sorted(test_npy_files):
         # get input npy file and ground truth label pair
-        file_keys = os.path.basename(npy_file).split('.')[0]
+        file_keys = os.path.basename(npy_file).split('.')[0].split('_')
         label_file = glob.glob(
-            os.path.join(test_set_path, "{}.txt".format(file_keys))
+            os.path.join(test_set_path, "{}.txt".format('_'.join(file_keys[:2])))
         )[0]
 
         # generate prediction on numpy file
