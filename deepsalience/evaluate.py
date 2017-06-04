@@ -34,7 +34,7 @@ def save_multif0_output(times, freqs, output_path):
 
             
 def save_singlef0_output(times, freqs, output_path):
-    """save multif0 output to a csv file
+    """save singlef0 output to a csv file
     """
     with open(output_path, 'w') as fhandle:
         csv_writer = csv.writer(fhandle, delimiter='\t')

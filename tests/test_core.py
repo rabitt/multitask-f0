@@ -1,11 +1,7 @@
 import unittest
 import os
 import numpy as np
-
-import imp
-
-core = imp.load_source(
-    'core', '../deepsalience/core.py')
+from deepsalience import core
 
 
 class TestPatchSize(unittest.TestCase):
@@ -74,8 +70,8 @@ class TestKerasGenerator(unittest.TestCase):
             if i > 15:
                 break
             self.assertEqual(2, len(sample))
-            self.assertEqual((1, 360, 50, 6), sample[0].shape)
-            self.assertEqual((1, 360, 50), sample[1].shape)
+            self.assertEqual((8, 360, 50, 6), sample[0].shape)
+            self.assertEqual((8, 360, 50), sample[1].shape)
             i += 1
 
     def test_generator_len11(self):
@@ -99,8 +95,8 @@ class TestKerasGenerator(unittest.TestCase):
             if i > 15:
                 break
             self.assertEqual(2, len(sample))
-            self.assertEqual((1, 360, 50, 6), sample[0].shape)
-            self.assertEqual((1, 360, 50), sample[1].shape)
+            self.assertEqual((8, 360, 50, 6), sample[0].shape)
+            self.assertEqual((8, 360, 50), sample[1].shape)
             i += 1
 
 class TestGrabPatchOutput(unittest.TestCase):
@@ -179,10 +175,10 @@ class TestGetFilePaths(unittest.TestCase):
 class TestData(unittest.TestCase):
 
     def test_all(self):
-        mtrack_list = core.track_id_list()
         data_path = 'data'
+        data_splits_path = '../outputs/data_splits.json'
         input_patch_size = core.patch_size()
-        dat = core.Data(mtrack_list, data_path, input_patch_size)
+        dat = core.Data(data_splits_path, data_path, input_patch_size)
         self.assertTrue(len(dat.train_set) > 0)
         self.assertTrue(len(dat.validation_set) > 0)
         self.assertTrue(len(dat.test_set) > 0)
