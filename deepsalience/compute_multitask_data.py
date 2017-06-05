@@ -386,42 +386,42 @@ def create_annotations(save_dir, track_id, stem_annotations):
         tags = annot_dict['tags']
 
         # all stems should have the 'multif0' tag
-        if 'multif0' in tags:
+        if 'multif0' in tags and annot_dict['times'] is not None:
             annotations['multif0']['times'].extend(annot_dict['times'])
             annotations['multif0']['freqs'].extend(annot_dict['freqs'])
 
         # if stem is guitar, add it to guitar
-        if 'guitar' in tags:
+        if 'guitar' in tags and annot_dict['times'] is not None:
             annotations['guitar']['times'].extend(annot_dict['times'])
             annotations['guitar']['freqs'].extend(annot_dict['freqs'])
         # if stem is not guitar add it to the multif0 no guitar annotation
-        else:
+        elif annot_dict['times'] is not None:
             annotations['multif0_noguitar']['times'].extend(annot_dict['times'])
             annotations['multif0_noguitar']['freqs'].extend(annot_dict['freqs'])
 
         # if stem is piano add to piano annotation
-        if 'piano' in tags:
+        if 'piano' in tags and annot_dict['times'] is not None:
             annotations['piano']['times'].extend(annot_dict['times'])
             annotations['piano']['freqs'].extend(annot_dict['freqs'])
 
         # if stem is not synthesized (i.e. not piano or guitar) add it to
         # the nosynth annotation
-        if 'piano' not in tags and 'guitar' not in tags:
+        if 'piano' not in tags and 'guitar' not in tags and annot_dict['times'] is not None:
             annotations['multif0_nosynth']['times'].extend(annot_dict['times'])
             annotations['multif0_nosynth']['freqs'].extend(annot_dict['freqs'])
 
         # add melody stems to melody annotation
-        if 'melody' in tags:
+        if 'melody' in tags  and annot_dict['times'] is not None:
             annotations['melody']['times'].extend(annot_dict['times'])
             annotations['melody']['freqs'].extend(annot_dict['freqs'])
 
         # add vocal stems to vocal annotation
-        if 'vocal' in tags:
+        if 'vocal' in tags and annot_dict['times'] is not None:
             annotations['vocal']['times'].extend(annot_dict['times'])
             annotations['vocal']['freqs'].extend(annot_dict['freqs'])
 
         # add bass stems to bass annotation
-        if 'bass' in tags:
+        if 'bass' in tags and annot_dict['times'] is not None:
             annotations['bass']['times'].extend(annot_dict['times'])
             annotations['bass']['freqs'].extend(annot_dict['freqs'])
 
