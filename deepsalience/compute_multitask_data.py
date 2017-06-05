@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import glob
 import json
-# import medleydb as mdb
+import medleydb as mdb
 from medleydb import mix
 import mir_eval
 import numpy as np
@@ -860,8 +860,10 @@ def get_all_audio_annot_pairs(mtrack, save_dir, resynth_path, replace_path):
         Path to saved json file
 
     """
+    print("    Resynth annotations and mixing...")
     resynth_pairs = create_complete_resynth_mix(
         mtrack, resynth_path, replace_path, save_dir)
+    print("    Fullmix annotations")
     fullmix_pairs = get_fullmix_annotations(mtrack, save_dir)
     all_pairs = {}
     for key, value in resynth_pairs.items():
@@ -881,7 +883,20 @@ def get_all_audio_annot_pairs(mtrack, save_dir, resynth_path, replace_path):
 
 
 def main(args):
-    pass
+    mtracks = mdb.load_all_multitracks(
+        dataset_version=['V1', 'V2', 'EXTRA'])
+    for mtrack in mtracks:
+        if mtrack.has_bleed:
+            continue
+        print("Processing {}...".format(mtrack.track_id))
+        json_path = get_all_audio_annot_pairs(
+            mtrack, args.save_dir, args.resynth_path, args.replace_path
+        )
+        print("...saved to {}".format(json_path))
+        print("")
+
+    print("done!")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -892,11 +907,7 @@ if __name__ == '__main__':
     parser.add_argument("resynth_path",
                         type=str,
                         help="resynth path")
-    parser.add_argument("n_jobs",
-                        type=int,
-                        help="Number of jobs to run in parallel.")
-    parser.add_argument("--use-mdb2",
-                        dest='use_mdb2',
-                        action='store_true')
-    parser.set_defaults(use_mdb2=True)
+    parser.add_argument("replace_path",
+                        type=str,
+                        help="replace path")
     main(parser.parse_args())
