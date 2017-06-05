@@ -787,6 +787,11 @@ def get_fullmix_annotations(mtrack, save_dir):
     melody_stems = []
     vocal_stems = []
     bass_stems = []
+    guitar_stems = []
+    piano_stems = []
+
+    guitars = ['acoustic guitar', 'clean electric guitar', 'distorted guitar']
+
     for stem in mtrack.stems.values():
         if any(inst in mix.VOCALS for inst in stem.instrument):
             vocal_stems.append(stem)
@@ -796,6 +801,10 @@ def get_fullmix_annotations(mtrack, save_dir):
             bass_stems.append(stem)
         if stem.component == 'melody':
             melody_stems.append(stem)
+        if any(inst in guitars for inst in stem.instrument):
+            guitar_stems.append(stem)
+        if any(inst == 'piano' for inst in stem.instrument):
+            piano_stems.append(stem)
 
     # use melody if there is melody or none
     if mtrack.dataset_version == 'V1':
@@ -836,6 +845,14 @@ def get_fullmix_annotations(mtrack, save_dir):
             os.path.join(save_dir, '{}_MIX_bass.txt'.format(mtrack.track_id))
         )
         audio_annot_pairs[mtrack.mix_path]['bass'] = output
+
+    # mark that there's no piano/guitar if there are no stems with
+    # those instruments
+    if len(piano_stems) == 0:
+        audio_annot_pairs[mtrack.mix_path]['piano'] = None
+
+    if len(guitar_stems) == 0:
+        audio_annot_pairs[mtrack.mix_path]['guitar'] = None
 
     return audio_annot_pairs
 
