@@ -889,7 +889,14 @@ def main(args):
     for mtrack in mtracks:
         if mtrack.has_bleed:
             continue
+
         print("Processing {}...".format(mtrack.track_id))
+
+        if os.path.exists(os.path.join(args.save_dir,
+                          "{}_training_pairs.json".format(mtrack.track_id))):
+            print("    already done!")
+            continue
+        
         json_path = get_all_audio_annot_pairs(
             mtrack, args.save_dir, args.resynth_path, args.replace_path
         )
