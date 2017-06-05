@@ -562,9 +562,12 @@ def create_mixes(mtrack, mix_path, mix_path_noguitar, mix_path_nosynth,
 
     """
     # create resynth mix
-    mix_filepaths, _ = mix.mix_multitrack(
-        mtrack, mix_path, stem_indices=stem_indices, alternate_files=altfiles
-    )
+    if len(stem_indices) > 0:
+        mix_filepaths, _ = mix.mix_multitrack(
+            mtrack, mix_path, stem_indices=stem_indices, alternate_files=altfiles
+        )
+    else:
+        mix_filepaths = None
     # create no guitar and no synth mixes
     stem_indices_noguitar = [
         s for s in stem_indices if s not in stem_indices_guitar
@@ -578,14 +581,22 @@ def create_mixes(mtrack, mix_path, mix_path_noguitar, mix_path_nosynth,
     altfiles_nosynth = {
         k: v for k, v in altfiles.items() if k in stem_indices_nosynth
     }
-    mix_noguitar_filepaths, _ = mix.mix_multitrack(
-        mtrack, mix_path_noguitar, stem_indices=stem_indices_noguitar,
-        alternate_files=altfiles_noguitar
-    )
-    mix_nosynth_filepaths, _ = mix.mix_multitrack(
-        mtrack, mix_path_nosynth, stem_indices=stem_indices_nosynth,
-        alternate_files=altfiles_nosynth
-    )
+    if len(stem_indices_noguitar) > 0:
+        mix_noguitar_filepaths, _ = mix.mix_multitrack(
+            mtrack, mix_path_noguitar, stem_indices=stem_indices_noguitar,
+            alternate_files=altfiles_noguitar
+        )
+    else:
+        mix_noguitar_filepaths = None
+
+    if len(stem_indices_nosynth) > 0:
+        mix_nosynth_filepaths, _ = mix.mix_multitrack(
+            mtrack, mix_path_nosynth, stem_indices=stem_indices_nosynth,
+            alternate_files=altfiles_nosynth
+        )
+    else:
+        mix_nosynth_filepaths = None
+
     return mix_filepaths, mix_noguitar_filepaths, mix_nosynth_filepaths
 
 
@@ -704,10 +715,19 @@ def create_complete_resynth_mix(mtrack, resynth_path, replace_path, save_dir):
         return None
 
     # generate mixes
-    create_mixes(
+    mix_filepaths, mix_noguitar_filepaths, mix_nosynth_filepaths = create_mixes(
         mtrack, mix_path, mix_path_noguitar, mix_path_nosynth,
         stem_indices, stem_indices_guitar, stem_indices_piano, altfiles
     )
+
+    if mix_filepaths is None:
+        audio_annot_pairs.pop(mix_path)
+
+    if mix_noguitar_filepaths is None:
+        audio_annot_pairs.pop(mix_path_noguitar)
+
+    if mix_nosynth_filepaths is None:
+        audio_annot_pairs.pop(mix_path_nosynth)
 
     return audio_annot_pairs
 
