@@ -125,11 +125,26 @@ def create_annotation_target(freq_grid, time_grid, annotation_times,
     time_bins = grid_to_bins(time_grid, 0.0, time_grid[-1])
     freq_bins = grid_to_bins(freq_grid, 0.0, freq_grid[-1])
 
-    annot_time_idx = np.digitize(annotation_times, time_bins) - 1
-    annot_freq_idx = np.digitize(annotation_freqs, freq_bins) - 1
-
     n_freqs = len(freq_grid)
     n_times = len(time_grid)
+
+    annotation_target = np.zeros((n_freqs, n_times))
+
+    if len(annotation_times) == 0 or len(annotation_freqs) == 0:
+        return annotation_target
+
+    annotation_times = np.array(annotation_times)
+    annotation_freqs = np.array(annotation_freqs)
+
+    non_zero_idx = np.where(annotation_freqs > 0)[0]
+    annotation_times = annotation_times[non_zero_idx]
+    annotation_freqs = annotation_freqs[non_zero_idx]
+
+    if len(annotation_times) == 0 or len(annotation_freqs) == 0:
+        return annotation_target
+
+    annot_time_idx = np.digitize(annotation_times, time_bins) - 1
+    annot_freq_idx = np.digitize(annotation_freqs, freq_bins) - 1
 
     idx = annot_time_idx < n_times
     annot_time_idx = annot_time_idx[idx]
@@ -139,7 +154,6 @@ def create_annotation_target(freq_grid, time_grid, annotation_times,
     annot_time_idx = annot_time_idx[idx2]
     annot_freq_idx = annot_freq_idx[idx2]
 
-    annotation_target = np.zeros((n_freqs, n_times))
     annotation_target[annot_freq_idx, annot_time_idx] = 1
 
     # create gaussian blur in frequency
