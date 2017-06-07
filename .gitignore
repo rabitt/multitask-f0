@@ -1,3 +1,5 @@
+*.s
+
 comparisons/melody2/model_11b_mel2_outputs/*
 *.out
 *.npy
