@@ -12,7 +12,7 @@ import numpy as np
 import os
 
 
-def compute_representations(audio_path, annotation_path, save_dir):
+def compute_representations(audio_path, annotation_path, save_dir, annotation_empty=False):
 
     X_bname = os.path.basename(audio_path).split('.')[0]
     X_save_path = os.path.join(save_dir, "{}_input.npy".format(X_bname))
@@ -36,7 +36,7 @@ def compute_representations(audio_path, annotation_path, save_dir):
     freq_grid = C.get_freq_grid()
     time_grid = C.get_time_grid(len(hcqt[0][0]))
 
-    if os.path.exists(annotation_path):
+    if os.path.exists(annotation_path) and annotation_empty is False:
         annot_times, annot_freqs = mir_eval.io.load_time_series(annotation_path)
     else:
         annot_times = []
@@ -59,9 +59,9 @@ def save_data(X, Y, X_save_path, Y_save_path):
         print("    Saved data to {}".format(Y_save_path))
 
 
-def get_XY_pairs(audio_path, annotation_path, save_dir): 
+def get_XY_pairs(audio_path, annotation_path, save_dir, annotation_empty): 
     X, Y, X_path, Y_path = compute_representations(
-        audio_path, annotation_path, save_dir
+        audio_path, annotation_path, save_dir, annotation_empty
     )
     save_data(X, Y, X_path, Y_path)
     return X_path, Y_path
@@ -109,11 +109,14 @@ def compute_labels_for_dict(json_file, data_path, save_dir):
     label_dict = {}
     for audio_path in annot_dict.keys():
         for key, annot_path in annot_dict[audio_path].items():
+            annot_none = False
             if annot_path is None:
+                annot_none = True
                 annot_path = get_missing_annotation_path(
                     audio_path, data_path, key)
-            
-            X_path, Y_path = get_XY_pairs(audio_path, annot_path, save_dir)
+
+            X_path, Y_path = get_XY_pairs(
+                audio_path, annot_path, save_dir, annotation_empty=annot_none)
             if X_path not in label_dict.keys():
                 label_dict[X_path] = {}
 
