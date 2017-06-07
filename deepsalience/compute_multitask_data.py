@@ -758,6 +758,10 @@ def get_annotation_mono(mtrack, stem_list):
     # otherwise, check if all stems are mono
     else:
         all_mono = True
+        
+        if mtrack.has_bleed:
+            all_mono = False
+
         for stem in stem_list:
             if len(stem.instrument) > 1:
                 all_mono = False
@@ -831,7 +835,7 @@ def get_fullmix_annotations(mtrack, save_dir):
         if mtrack.melody3_annotation is not None:
             annot = np.array(mtrack.melody3_annotation).T
             melody_times, melody_freqs = multif0_to_timefreq(
-                annot[0], annot[1:])
+                annot[0], annot[1:].T)
         else:
             melody_times = []
             melody_freqs = []
@@ -904,8 +908,10 @@ def get_all_audio_annot_pairs(mtrack, save_dir, resynth_path, replace_path):
     print("    Fullmix annotations")
     fullmix_pairs = get_fullmix_annotations(mtrack, save_dir)
     all_pairs = {}
-    for key, value in resynth_pairs.items():
-        all_pairs[key] = value
+    
+    if resynth_pairs is not None:
+        for key, value in resynth_pairs.items():
+            all_pairs[key] = value
 
     for key, value in fullmix_pairs.items():
         all_pairs[key] = value
@@ -924,8 +930,6 @@ def main(args):
     mtracks = mdb.load_all_multitracks(
         dataset_version=['V1', 'V2', 'EXTRA'])
     for mtrack in mtracks:
-        if mtrack.has_bleed:
-            continue
 
         print("Processing {}...".format(mtrack.track_id))
 

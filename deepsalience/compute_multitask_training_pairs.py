@@ -21,8 +21,7 @@ def compute_representations(audio_path, annotation_path, save_dir):
     Y_save_path = os.path.join(save_dir, "{}_output.npy".format(Y_bname))
     
     if os.path.exists(X_save_path) and os.path.exists(Y_save_path):
-        print("    > already computed!")
-        return None, None, None, None
+        return None, None, X_save_path, Y_save_path
 
     if not os.path.exists(X_save_path):
         print("    > computing CQT for {}".format(
@@ -69,7 +68,7 @@ def get_XY_pairs(audio_path, annotation_path, save_dir):
 
 def get_missing_annotation_path(audio_path, data_path, annotation_key):
     fparts = os.path.basename(audio_path).split('.')[0].split('_')
-    track_id = '_'.join(fparts[0], fparts[1])
+    track_id = '_'.join(fparts[:2])
     if len(fparts) == 3:
         annotation_bname = "{}_MIX_{}.txt".format(track_id, annotation_key)
     elif len(fparts) == 5:
