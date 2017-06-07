@@ -41,6 +41,10 @@ def compute_representations(audio_path, annotation_path, save_dir, annotation_em
         annot_times = []
         annot_freqs = []
 
+    if len(annot_times) == 0:
+        Y_save_path = os.path.join(
+            save_dir, "{}_empty_output.npy".format(Y_bname))
+
     annot_target = C.create_annotation_target(
         freq_grid, time_grid, annot_times, annot_freqs
     )
