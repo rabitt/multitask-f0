@@ -21,8 +21,11 @@ def compute_representations(audio_path, annotation_path, save_dir):
         Y_task = 'empty'
     else:
         Y_parts = os.path.basename(annotation_path).split('.')[0].split('_')
-        if Y_parts == 'annotation':
-            Y_task = Y_parts[2]
+        if Y_parts[-1] == 'annotation':
+            if len(Y_parts) == 4:
+                Y_task = Y_parts[2]
+            else:
+                Y_task = '_'.join(Y_parts[2:4])
         else:
             Y_task = Y_parts[3]
 
