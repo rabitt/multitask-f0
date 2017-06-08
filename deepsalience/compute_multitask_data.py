@@ -814,7 +814,11 @@ def get_fullmix_annotations(mtrack, save_dir):
     guitar_stems = []
     piano_stems = []
 
-    guitars = ['acoustic guitar', 'clean electric guitar', 'distorted guitar']
+    guitars = [
+        'acoustic guitar',
+        'clean electric guitar',
+        'distorted electric guitar'
+    ]
 
     for stem in mtrack.stems.values():
         if any(inst in mix.VOCALS for inst in stem.instrument):
