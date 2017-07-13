@@ -92,7 +92,7 @@ def get_replace_info(mtrack, replace_path):
     stem_indices = []
     replace_stem_annotations = {}
     replace_altindices = {}
-    
+
     # loop over resynthesized stems
     for stem_path in replace_stems:
         # path where annotation should live
@@ -165,7 +165,7 @@ def get_resynth_info(mtrack, resynth_path, stem_indices):
     stem_indices_guitar = []
     resynth_stem_annotations = {}
     resynth_altindices = {}
-    
+
     # loop over resynthesized stems
     for stem_path in resynth_stems:
         # path where annotation should live
@@ -203,6 +203,7 @@ def get_resynth_info(mtrack, resynth_path, stem_indices):
             stem_indices_piano.append(stem_id)
         elif ('electric piano' in instrument or
               'synthesizer' in instrument):
+            tags.append('keys')
             stem_indices_piano.append(stem_id)
         elif ('acoustic guitar' in instrument or
               'clean electric guitar' in instrument or
@@ -255,7 +256,7 @@ def get_orig_stem_info(mtrack, stem_indices):
     for stem in mtrack.stems.values():
 
         # skip this stem if it was resynthesized
-        if stem.stem_idx in stem_indices:    
+        if stem.stem_idx in stem_indices:
             continue
 
         # skip this stem if it has more than one instrument
@@ -406,7 +407,10 @@ def create_annotations(save_dir, track_id, stem_annotations):
 
         # if stem is not synthesized (i.e. not piano or guitar) add it to
         # the nosynth annotation
-        if 'piano' not in tags and 'guitar' not in tags and annot_dict['times'] is not None:
+        if ('piano' not in tags and
+                'guitar' not in tags and
+                'keys' not in tags and
+                annot_dict['times'] is not None):
             annotations['multif0_nosynth']['times'].extend(annot_dict['times'])
             annotations['multif0_nosynth']['freqs'].extend(annot_dict['freqs'])
 
@@ -504,10 +508,10 @@ def generate_filtered_stems(stem_annot_activity, mtrack, save_dir):
 
     """
     filtered_altfiles = {}
-    
+
     # for each stem with an annotation filter, create filtered stem
     for key in stem_annot_activity.keys():
-        
+
         if stem_annot_activity[key] is None:
             continue
 
@@ -758,7 +762,7 @@ def get_annotation_mono(mtrack, stem_list):
     # otherwise, check if all stems are mono
     else:
         all_mono = True
-        
+
         if mtrack.has_bleed:
             all_mono = False
 
@@ -912,7 +916,7 @@ def get_all_audio_annot_pairs(mtrack, save_dir, resynth_path, replace_path):
     print("    Fullmix annotations")
     fullmix_pairs = get_fullmix_annotations(mtrack, save_dir)
     all_pairs = {}
-    
+
     if resynth_pairs is not None:
         for key, value in resynth_pairs.items():
             all_pairs[key] = value
@@ -941,7 +945,7 @@ def main(args):
                           "{}_training_pairs.json".format(mtrack.track_id))):
             print("    already done!")
             continue
-        
+
         json_path = get_all_audio_annot_pairs(
             mtrack, args.save_dir, args.resynth_path, args.replace_path
         )
