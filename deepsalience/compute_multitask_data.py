@@ -736,7 +736,7 @@ def create_complete_resynth_mix(mtrack, resynth_path, replace_path, save_dir):
     return audio_annot_pairs
 
 
-def get_annotation_mono(mtrack, stem_list):
+def get_annotation_mono(mtrack, stem_list, use_estimate=True):
     """Get annotation for a subset of stems if all stems are mono
 
     Parameters
@@ -778,7 +778,7 @@ def get_annotation_mono(mtrack, stem_list):
             freqs = []
             for stem in stem_list:
                 annot_t, annot_f, _ = C.get_stem_annotation(
-                    stem, mtrack, use_estimate=True
+                    stem, mtrack, use_estimate=use_estimate
                 )
 
                 # if there is no annotation return None
@@ -859,7 +859,7 @@ def get_fullmix_annotations(mtrack, save_dir):
         audio_annot_pairs[mtrack.mix_path]['melody'] = output
 
     # use vocals if all vocals are mono or there are none
-    vocal_times, vocal_freqs = get_annotation_mono(mtrack, vocal_stems)
+    vocal_times, vocal_freqs = get_annotation_mono(mtrack, vocal_stems, use_estimate=False)
     if vocal_times is not None:
         output = save_annotation(
             vocal_times,
@@ -869,7 +869,7 @@ def get_fullmix_annotations(mtrack, save_dir):
         audio_annot_pairs[mtrack.mix_path]['vocal'] = output
 
     # use bass if all bass is mono or there are none
-    bass_times, bass_freqs = get_annotation_mono(mtrack, bass_stems)
+    bass_times, bass_freqs = get_annotation_mono(mtrack, bass_stems, use_estimate=False)
     if bass_times is not None:
         output = save_annotation(
             bass_times,
