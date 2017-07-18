@@ -182,10 +182,14 @@ def get_annot_activation(times, freqs, mtrack_duration):
     time_bins = grid_to_bins(time_grid, 0.0, time_grid[-1])
 
     annot_time_idx = np.digitize(times, time_bins) - 1
-    annot_time_idx = annot_time_idx[annot_time_idx < len(time_grid)]
+    good_indices = annot_time_idx < len(time_grid)
+    annot_time_idx = annot_time_idx[good_indices]
 
+#    print(time_grid.shape)
+#    print(good_indices.shape)
+#    print(annot_time_idx.shape)
     freq_complete = np.zeros(time_grid.shape)
-    freq_complete[annot_time_idx] = freqs
+    freq_complete[annot_time_idx] = freqs[good_indices]
 
     annot_activation = np.array(freq_complete > 0, dtype=float)
     annot_activation = upfirdn(np.ones((256, )), annot_activation)
