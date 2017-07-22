@@ -19,6 +19,10 @@ from keras.layers.wrappers import TimeDistributed
 from keras.layers.normalization import BatchNormalization
 from keras import backend as K
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
 # import compute_training_data as C
 # import experiment_datasets
 # import evaluate
@@ -27,7 +31,13 @@ from keras import backend as K
 DATA_TYPES = ['XA', 'XB', 'XC', 'XD']
 TASKS = ['multif0', 'melody', 'bass', 'vocal']
 JSON_PATH = "/scratch/rmb456/multif0_ismir2017/multitask_data/XY_pairs"
+DATA_SPLITS_PATH = "/scratch/rmb456/multif0/outputs/data_splits.json"
 
+
+def load_data_splits():
+    with open(DATA_SPLITS_PATH, 'r') as fhandle:
+        data_splits = json.load(fhandle)
+    return data_splits
 
 
 def get_grouped_data(json_path, mtrack_list):
@@ -170,8 +180,25 @@ def multitask_batch_generator(task_generators, tasks):
         yield (X, Y, W)
 
 
-def multitask_generator(mtrack_list, json_path, data_types=DATA_TYPES, tasks=TASKS,
-                        mux_weights=None):
+def bkld(y_true, y_pred):
+    """Brian's KL Divergence implementation
+    """
+    y_true = K.clip(y_true, K.epsilon(), 1.0 - K.epsilon())
+    y_pred = K.clip(y_pred, K.epsilon(), 1.0 - K.epsilon())
+    return K.mean(K.mean(
+        -1.0*y_true* K.log(y_pred) - (1.0 - y_true) * K.log(1.0 - y_pred),
+        axis=-1), axis=-1)
+
+
+def soft_binary_accuracy(y_true, y_pred):
+    """Binary accuracy that works when inputs are probabilities
+    """
+    return K.mean(K.mean(
+        K.equal(K.round(y_true), K.round(y_pred)), axis=-1), axis=-1)
+
+
+def multitask_generator(mtrack_list, json_path=JSON_PATH, data_types=DATA_TYPES,
+                        tasks=TASKS, mux_weights=None):
 
     typed_data = get_grouped_data(json_path, mtrack_list)
     task_pairs = get_all_task_pairs(typed_data)
@@ -230,3 +257,35 @@ def multitask_generator(mtrack_list, json_path, data_types=DATA_TYPES, tasks=TAS
 
     for batch in batch_gen:
         yield batch
+
+
+def history_plot(history, tasks, save_path):
+    plt.figure(figsize=(15, 15))
+
+    plt.subplot(3, 1, 1)
+    plt.plot(history.history['loss'])
+    for task in tasks:
+        plt.plot(history.history['{}_loss'.format(task)])
+    plt.title('Training Loss')
+    plt.ylabel('Training Loss')
+    plt.xlabel('epoch')
+    plt.legend(['overall'] + tasks, loc='upper left')
+
+    plt.subplot(3, 1, 2)
+    plt.plot(history.history['val_loss'])
+    for task in tasks:
+        plt.plot(history.history['val_{}_loss'.format(task)])
+    plt.title('Validation Loss')
+    plt.ylabel('Validation Loss')
+    plt.xlabel('epoch')
+    plt.legend(['overall'] + tasks, loc='upper left')
+
+    plt.subplot(3, 1, 3)
+    for task in tasks:
+        plt.plot(history.history['val_{}_soft_binary_accuracy'.format(task)])
+    plt.title('soft_binary_accuracy')
+    plt.ylabel('soft_binary_accuracy')
+    plt.xlabel('epoch')
+    plt.legend(tasks, loc='upper left')
+
+    plt.savefig(save_path, format='pdf')
