@@ -1,24 +1,39 @@
+from __future__ import print_function
+
+import argparse
+
 import multitask_core as MC
 import multitask_evaluate as ME
 import keras
+import os
 
-def main(args):
+
+def main(model, output_path, loss_weights, sample_weight_mode,
+         data_types=None, tasks=None, mux_weights=None,
+         samples_per_epoch=50, nb_epochs=200, nb_val_samples=10):
+
     data_splits = MC.load_data_splits()
 
-    if args.data_types is None:
+    if data_types is None:
         data_types = MC.DATA_TYPES
     else:
-        data_types = args.data_types
+        data_types = data_types
 
-    if args.tasks is None:
+    if tasks is None:
         tasks = MC.TASKS
     else:
-        tasks = args.tasks
+        tasks = tasks
 
-    if args.mux_weights is None:
+    if mux_weights is None:
         mux_weights = None
     else:
-        mux_weights = args.mux_weights
+        mux_weights = mux_weights
+
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+
+    model_save_path = os.path.join(output_path, "model_weights.h5")
+    history_plot_path = os.path.join(output_path, "training_history.pdf")
 
     train_generator = MC.multitask_generator(
         data_splits['train'], data_types=data_types,
@@ -30,24 +45,15 @@ def main(args):
         data_splits['test'], data_types=data_types,
         tasks=tasks, mux_weights=mux_weights)
 
-    loss_weights = args.loss_weights
-    sample_weight_mode = args.sample_weight_mode
-    model_save_path = args.model_save_path
-
-    model = args.model
     model.compile(
         loss=MC.bkld, metrics=['mse', MC.soft_binary_accuracy],
         loss_weights=loss_weights,
         optimizer='adam', sample_weight_mode=sample_weight_mode
     )
 
-    SAMPLES_PER_EPOCH = 50
-    NB_EPOCHS = 200
-    NB_VAL_SAMPLES = 10
-
     history = model.fit_generator(
-        train_generator, SAMPLES_PER_EPOCH, epochs=NB_EPOCHS, verbose=1,
-        validation_data=validate_generator, validation_steps=NB_VAL_SAMPLES,
+        train_generator, samples_per_epoch, epochs=nb_epochs, verbose=1,
+        validation_data=validate_generator, validation_steps=nb_val_samples,
         callbacks=[
             keras.callbacks.ModelCheckpoint(
                 model_save_path, save_best_only=True, verbose=1),
@@ -56,12 +62,12 @@ def main(args):
         ]
     )
 
-    #TODO FIGURE OUT OUTPUT PATHS GARBAGE
-
-    MC.history_plot(history, tasks, args.history_plot_path)
+    MC.history_plot(history, tasks, history_plot_path)
 
     model.load_weights(model_save_path)
 
     thresholds, scores = ME.evaluate_model(model, tasks)
-    ME.save_eval(args.eval_output_path, thresholds, scores)
+    ME.save_eval(output_path, thresholds, scores)
+
+    main(parser.parse_args())
 
