@@ -6,7 +6,7 @@
 #SBATCH --time=14:00:00
 #SBATCH --mem=50GB
 #SBATCH --gres=gpu:1
-#SBATCH --output=multitask_base_experiment_%j.out
+#SBATCH --output=multitask_singletask_melody_%j.out
 
 module purge
 module load cuda/8.0.44
@@ -18,4 +18,4 @@ unset XDG_RUNTIME_DIR
 
 cd ~/repos/multif0/deepsalience
 
-python multitask_singletask_mel.py
+python multitask_singletask_melody.py

@@ -6,7 +6,7 @@
 #SBATCH --time=14:00:00
 #SBATCH --mem=50GB
 #SBATCH --gres=gpu:1
-#SBATCH --output=multitask_base_experiment_%j.out
+#SBATCH --output=multitask_singletask_mf0_%j.out
 
 module purge
 module load cuda/8.0.44

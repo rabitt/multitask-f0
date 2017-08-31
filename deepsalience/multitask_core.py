@@ -130,10 +130,10 @@ def multitask_patch_generator(fpath_in, dict_out, tasks, n_samples=20,
                 w[task] = 0.0
 
             y[task] = y_task
-            
+
         yield dict(X=x, Y=y, W=w)
 
-        
+
 def get_task_pairs(data_list, task):
     """Get a list of [input path, output dictionary] pairs where each
     element of the list has at least `task` as a key in the output dictionary.
@@ -203,7 +203,7 @@ def multitask_generator(mtrack_list, json_path=JSON_PATH, data_types=DATA_TYPES,
 
     typed_data = get_grouped_data(json_path, mtrack_list)
     task_pairs = get_all_task_pairs(typed_data)
-    
+
     # make a streamer for each data type and task
     data_streamers = {}
     for data_type in data_types:
@@ -267,7 +267,8 @@ def history_plot(history, tasks, save_path):
     plt.subplot(3, 1, 1)
     plt.plot(history.history['loss'])
     for task in tasks:
-        plt.plot(history.history['{}_loss'.format(task)])
+        if '{}_loss'.format(task) in history.history.keys():
+            plt.plot(history.history['{}_loss'.format(task)])
     plt.title('Training Loss')
     plt.ylabel('Training Loss')
     plt.xlabel('epoch')
@@ -276,7 +277,8 @@ def history_plot(history, tasks, save_path):
     plt.subplot(3, 1, 2)
     plt.plot(history.history['val_loss'])
     for task in tasks:
-        plt.plot(history.history['val_{}_loss'.format(task)])
+        if 'val_{}_loss'.format(task) in history.history.keys():
+            plt.plot(history.history['val_{}_loss'.format(task)])
     plt.title('Validation Loss')
     plt.ylabel('Validation Loss')
     plt.xlabel('epoch')
@@ -284,7 +286,8 @@ def history_plot(history, tasks, save_path):
 
     plt.subplot(3, 1, 3)
     for task in tasks:
-        plt.plot(history.history['val_{}_soft_binary_accuracy'.format(task)])
+        if 'val_{}_soft_binary_accuracy'.format(task) in history.history.keys():
+            plt.plot(history.history['val_{}_soft_binary_accuracy'.format(task)])
     plt.title('soft_binary_accuracy')
     plt.ylabel('soft_binary_accuracy')
     plt.xlabel('epoch')
