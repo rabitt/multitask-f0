@@ -50,7 +50,7 @@ def get_single_test_prediction(model, npy_file=None, audio_file=None, max_frames
             for i, pred in enumerate(prediction):
                 output_list[i].append(pred[0, :, :])
         else:
-            output_list[0].append(pred[0, :, :])
+            output_list[0].append(prediction[0, :, :])
 
     for i in range(len(output_list)):
         predicted_output[i] = np.hstack(output_list[i])
