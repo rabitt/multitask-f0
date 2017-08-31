@@ -51,18 +51,19 @@ def main(model, output_path, loss_weights, sample_weight_mode,
         optimizer='adam', sample_weight_mode=sample_weight_mode
     )
 
-    history = model.fit_generator(
-        train_generator, samples_per_epoch, epochs=nb_epochs, verbose=1,
-        validation_data=validate_generator, validation_steps=nb_val_samples,
-        callbacks=[
-            keras.callbacks.ModelCheckpoint(
-                model_save_path, save_best_only=True, verbose=1),
-            keras.callbacks.ReduceLROnPlateau(patience=5, verbose=1),
-            keras.callbacks.EarlyStopping(patience=25, verbose=0)
-        ]
-    )
+    if not os.path.exists(model_save_path):
+        history = model.fit_generator(
+            train_generator, samples_per_epoch, epochs=nb_epochs, verbose=1,
+            validation_data=validate_generator, validation_steps=nb_val_samples,
+            callbacks=[
+                keras.callbacks.ModelCheckpoint(
+                    model_save_path, save_best_only=True, verbose=1),
+                keras.callbacks.ReduceLROnPlateau(patience=5, verbose=1),
+                keras.callbacks.EarlyStopping(patience=25, verbose=0)
+            ]
+        )
 
-    MC.history_plot(history, tasks, history_plot_path)
+        MC.history_plot(history, tasks, history_plot_path)
 
     model.load_weights(model_save_path)
 

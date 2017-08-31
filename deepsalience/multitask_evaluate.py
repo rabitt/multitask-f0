@@ -29,20 +29,29 @@ def get_single_test_prediction(model, npy_file=None, audio_file=None, max_frames
         raise ValueError("one of npy_file or audio_file must be specified")
 
     input_hcqt = input_hcqt.transpose(1, 2, 0)[np.newaxis, :, :, :]
-    
+
     if max_frames is not None:
         input_hcqt = input_hcqt[:, :, :max_frames, :]
 
     n_t = input_hcqt.shape[2]
     n_slices = 1000
     t_slices = list(np.arange(0, n_t, n_slices))
-    output_list = [[] for i in range(len(model.output))]
+    model_output = model.output
+    if isinstance(model_output, list):
+        output_list = [[] for i in range(len(model_output))]
+        predicted_output = [[] for i in range(len(model_output))]
+    else:
+        output_list = [[]]
+        predicted_output = [[]]
+
     for t in t_slices:
         prediction = model.predict(input_hcqt[:, :, t:t+n_slices, :])
-        for i, pred in enumerate(prediction):
-            output_list[i].append(pred[0, :, :])
+        if isinstance(prediction, list):
+            for i, pred in enumerate(prediction):
+                output_list[i].append(pred[0, :, :])
+        else:
+            output_list[0].append(pred[0, :, :])
 
-    predicted_output = [[] for i in range(len(model.output))]
     for i in range(len(output_list)):
         predicted_output[i] = np.hstack(output_list[i])
 
@@ -102,7 +111,7 @@ def get_validation_files(task):
             validation_files.append([npy_file, txt_file])
         else:
             print('coudnt find text path')
-    
+
     return validation_files
 
 
@@ -110,12 +119,12 @@ def time_freq_to_ragged_time_series(times, freqs, hop):
     max_time = np.max(times)
     t_uniform = np.arange(0, max_time, hop)
     time_idx = np.digitize(times, t_uniform) - 1
-    
+
     freq_list = [[] for _ in t_uniform]
     for i, f in zip(time_idx, freqs):
         if f > 0:
             freq_list[i].append(f)
-    
+
     freq_arrays = [np.array(lst) for lst in freq_list]
     return t_uniform, freq_arrays
 
@@ -142,17 +151,17 @@ def get_best_thresh_multif0(model, task_indices, task='multif0'):
     n_validation = len(validation_files)
     for i, (npy_file, target_file) in enumerate(validation_files):
         print("    > {} / {}".format(i + 1, n_validation))
-        
+
         # generate prediction on numpy file
         predicted_outputs, _ = \
             get_single_test_prediction(model, npy_file=npy_file)
         predicted_output = predicted_outputs[task_indices[task]]
-                
+
         # load ground truth labels
         temp_times, temp_freqs = mir_eval.io.load_time_series(target_file)
         ref_times, ref_freqs = time_freq_to_ragged_time_series(
             temp_times, temp_freqs, hop=256./44100.)
-        
+
         for thresh in thresh_vals:
             # get multif0 output from prediction
             est_times, est_freqs, _ = \
@@ -187,7 +196,7 @@ def get_best_thresh_singlef0(model, task, task_indices):
             get_single_test_prediction(model, npy_file=npy_file)
 
         predicted_output = predicted_outputs[task_indices[task]]
-            
+
         temp_times, temp_freqs = mir_eval.io.load_time_series(target_file)
         ref_times, ref_freqs = time_freq_fill_zeros(
             temp_times, temp_freqs, hop=256./44100.)
@@ -221,7 +230,7 @@ def get_test_files(test_set_name):
     elif test_set_name == 'weimar_jazz_melody':
         test_dir = os.path.join(TEST_DIR, 'weimar_jazz', 'melody')
         extension = 'csv'
-    
+
     npy_files = glob.glob(os.path.join(test_dir, "*.npy"))
     test_files = []
     for npy_file in npy_files:
@@ -234,15 +243,15 @@ def get_test_files(test_set_name):
             test_files.append([npy_file, txt_file])
         else:
             print('coudnt find text path')
-    
-    return test_files        
+
+    return test_files
 
 
 def score_singlef0_on_test_set(model, test_set, task_indices, thresh=0.5):
     test_files = get_test_files(test_set)
     print("Scoring on {}".format(test_set))
-    
-    
+
+
     if test_set == 'orchset':
         delimiter = '\t'
     else:
@@ -265,9 +274,9 @@ def score_singlef0_on_test_set(model, test_set, task_indices, thresh=0.5):
         predicted_outputs, _ = \
             get_single_test_prediction(model, npy_file=npy_file)
         predicted_output = predicted_outputs[task_idx]
-        
+
         file_keys = os.path.basename(npy_file).split('.')[0]
-        
+
         ref_times, ref_freqs = mir_eval.io.load_time_series(
             target_file, delimiter=delimiter)
         est_times, est_freqs = pitch_activations_to_singlef0(
@@ -300,7 +309,7 @@ def score_multif0_on_test_set(model, test_set, task_indices, thresh=0.5):
 
         print("    > {} / {}".format(i + 1, n_test_files))
         file_keys = os.path.basename(npy_file).split('.')[0]
-        
+
         # generate prediction on numpy file
         predicted_outputs, _ = \
             get_single_test_prediction(model, npy_file=npy_file)
@@ -373,7 +382,7 @@ def evaluate_model(model, tasks, task_indices):
             model, 'weimar_jazz_bass', task_indices, best_thresh_bass)
 
         scores['wj_bass'] = df_wj_bass
-    
+
     if 'vocal' in tasks:
         print("    > Getting best threshold...")
         best_thresh_vocal = get_best_thresh_singlef0(model, 'vocal', task_indices)
