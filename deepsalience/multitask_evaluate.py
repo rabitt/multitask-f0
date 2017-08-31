@@ -36,13 +36,13 @@ def get_single_test_prediction(model, npy_file=None, audio_file=None, max_frames
     n_t = input_hcqt.shape[2]
     n_slices = 1000
     t_slices = list(np.arange(0, n_t, n_slices))
-    output_list = [[], [], [], []]
+    output_list = [[] for i in range(len(model.output))]
     for t in t_slices:
         prediction = model.predict(input_hcqt[:, :, t:t+n_slices, :])
         for i, pred in enumerate(prediction):
             output_list[i].append(pred[0, :, :])
 
-    predicted_output = [[], [], [], []]
+    predicted_output = [[] for i in range(len(model.output))]
     for i in range(len(output_list)):
         predicted_output[i] = np.hstack(output_list[i])
 
@@ -50,8 +50,6 @@ def get_single_test_prediction(model, npy_file=None, audio_file=None, max_frames
 
 
 def pitch_activations_to_singlef0(pitch_activation_mat, thresh, use_neg=True):
-    # pitch_activation_mat = (
-    #     pitch_activation_mat / np.max(np.max(pitch_activation_mat)))
     max_idx = np.argmax(pitch_activation_mat, axis=0)
     est_times = C.get_time_grid(pitch_activation_mat.shape[1])
     freq_grid = C.get_freq_grid()
@@ -133,7 +131,7 @@ def time_freq_fill_zeros(times, freqs, hop):
     return t_uniform, freq_array
 
 
-def get_best_thresh_multif0(model):
+def get_best_thresh_multif0(model, task_indices, task='multif0'):
     """Use validation set to get the best threshold value
     """
     # get validation files
@@ -148,13 +146,13 @@ def get_best_thresh_multif0(model):
         # generate prediction on numpy file
         predicted_outputs, _ = \
             get_single_test_prediction(model, npy_file=npy_file)
-        predicted_output = predicted_outputs[0]
+        predicted_output = predicted_outputs[task_indices[task]]
                 
         # load ground truth labels
         temp_times, temp_freqs = mir_eval.io.load_time_series(target_file)
         ref_times, ref_freqs = time_freq_to_ragged_time_series(
             temp_times, temp_freqs, hop=256./44100.)
-
+        
         for thresh in thresh_vals:
             # get multif0 output from prediction
             est_times, est_freqs, _ = \
@@ -175,7 +173,7 @@ def get_best_thresh_multif0(model):
     return best_thresh
 
 
-def get_best_thresh_singlef0(model, task):
+def get_best_thresh_singlef0(model, task, task_indices):
     thresh_vals = np.arange(0, 1, 0.1)
     mel_accuracy = {v: [] for v in thresh_vals}
 
@@ -188,12 +186,7 @@ def get_best_thresh_singlef0(model, task):
         predicted_outputs, _ = \
             get_single_test_prediction(model, npy_file=npy_file)
 
-        if task == 'melody':
-            predicted_output = predicted_outputs[1]
-        elif task == 'bass':
-            predicted_output = predicted_outputs[2]
-        elif task == 'vocal':
-            predicted_output = predicted_outputs[3]
+        predicted_output = predicted_outputs[task_indices[task]]
             
         temp_times, temp_freqs = mir_eval.io.load_time_series(target_file)
         ref_times, ref_freqs = time_freq_fill_zeros(
@@ -281,8 +274,10 @@ def score_singlef0_on_test_set(model, test_set, task_indices, thresh=0.5):
             predicted_output, thresh)
         mel_scores = mir_eval.melody.evaluate(
             ref_times, ref_freqs, est_times, est_freqs)
-        
-        mel_scores['track'] = '_'.join(file_keys)
+        if isinstance(file_keys, list):
+            mel_scores['track'] = '_'.join(file_keys)
+        else:
+            mel_scores['track'] = file_keys
         all_scores.append(mel_scores)
 
     df = pd.DataFrame(all_scores)
@@ -331,7 +326,7 @@ def score_multif0_on_test_set(model, test_set, task_indices, thresh=0.5):
     return df
 
 
-def evaluate_model(model, tasks):
+def evaluate_model(model, tasks, task_indices):
 
     thresholds = {}
     scores = {}
@@ -339,15 +334,14 @@ def evaluate_model(model, tasks):
     print("Computing Multif0 Metrics...")
     if 'multif0' in tasks:
         print("    > Getting best threshold...")
-        best_thresh_mf0 = get_best_thresh_multif0(model)
-
+        best_thresh_mf0 = get_best_thresh_multif0(model, task_indices)
         thresholds['multif0'] = best_thresh_mf0
 
-        df_bach10 = score_multif0_on_test_set(model, 'bach10', best_thresh_mf0)
-        df_maps = score_multif0_on_test_set(model, 'maps', best_thresh_mf0)
+        df_bach10 = score_multif0_on_test_set(model, 'bach10', task_indices, best_thresh_mf0)
+        df_maps = score_multif0_on_test_set(model, 'maps', task_indices, best_thresh_mf0)
         df_mdb_mf0 = score_multif0_on_test_set(
-            model, 'medleydb_multif0', best_thresh_mf0)
-        df_su = score_multif0_on_test_set(model, 'su', best_thresh_mf0)
+            model, 'medleydb_multif0', task_indices, best_thresh_mf0)
+        df_su = score_multif0_on_test_set(model, 'su', task_indices, best_thresh_mf0)
 
         scores['bach10'] = df_bach10
         scores['maps'] = df_maps
@@ -356,16 +350,15 @@ def evaluate_model(model, tasks):
 
     if 'melody' in tasks:
         print("    > Getting best threshold...")
-        best_thresh_mel = get_best_thresh_singlef0(model, 'melody')
-
+        best_thresh_mel = get_best_thresh_singlef0(model, 'melody', task_indices)
         thresholds['melody'] = best_thresh_mel
 
         df_mdb_mel = score_singlef0_on_test_set(
-            model, 'medleydb_melody', best_thresh_mel)
+            model, 'medleydb_melody', task_indices, best_thresh_mel)
         df_orchset = score_singlef0_on_test_set(
-            model, 'orchset', best_thresh_mel)
+            model, 'orchset', task_indices, best_thresh_mel)
         df_wj_mel = score_singlef0_on_test_set(
-            model, 'weimar_jazz_melody', best_thresh_mel)
+            model, 'weimar_jazz_melody', task_indices, best_thresh_mel)
 
         scores['mdb_mel'] = df_mdb_mel
         scores['orchset'] = df_orchset
@@ -373,22 +366,21 @@ def evaluate_model(model, tasks):
 
     if 'bass' in tasks:
         print("    > Getting best threshold...")
-        best_thresh_bass = get_best_thresh_singlef0(model, 'bass')
-
+        best_thresh_bass = get_best_thresh_singlef0(model, 'bass', task_indices)
         thresholds['bass'] = best_thresh_bass
 
         df_wj_bass = score_singlef0_on_test_set(
-            model, 'weimar_jazz_bass', best_thresh_bass)
+            model, 'weimar_jazz_bass', task_indices, best_thresh_bass)
 
         scores['wj_bass'] = df_wj_bass
     
     if 'vocal' in tasks:
         print("    > Getting best threshold...")
-        best_thresh_vocal = get_best_thresh_singlef0(model, 'vocal')
+        best_thresh_vocal = get_best_thresh_singlef0(model, 'vocal', task_indices)
 
         thresholds['vocal'] = best_thresh_vocal
 
-        df_ikala = score_singlef0_on_test_set(model, 'ikala', best_thresh_vocal)
+        df_ikala = score_singlef0_on_test_set(model, 'ikala', task_indices, best_thresh_vocal)
 
         scores['ikala'] = df_ikala
 
@@ -397,7 +389,8 @@ def evaluate_model(model, tasks):
 
 def save_eval(output_path, thresholds, scores):
     save_path = os.path.join(output_path, 'evaluation')
-    os.mkdir(save_path)
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
 
     print("Saving Thresholds...")
     threshold_path = os.path.join(save_path, 'thresholds.json')

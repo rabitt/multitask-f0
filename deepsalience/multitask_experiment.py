@@ -9,7 +9,7 @@ import os
 
 
 def main(model, output_path, loss_weights, sample_weight_mode,
-         data_types=None, tasks=None, mux_weights=None,
+         task_indices, data_types=None, tasks=None, mux_weights=None,
          samples_per_epoch=50, nb_epochs=200, nb_val_samples=10):
 
     data_splits = MC.load_data_splits()
@@ -66,8 +66,6 @@ def main(model, output_path, loss_weights, sample_weight_mode,
 
     model.load_weights(model_save_path)
 
-    thresholds, scores = ME.evaluate_model(model, tasks)
+    thresholds, scores = ME.evaluate_model(model, tasks, task_indices)
     ME.save_eval(output_path, thresholds, scores)
-
-    main(parser.parse_args())
 

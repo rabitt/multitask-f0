@@ -170,12 +170,13 @@ def multitask_batch_generator(task_generators, tasks):
 
     while True:
         next_samples = [next(iterators[task]) for task in tasks]
+
         X = np.concatenate([samp[0] for samp in next_samples])
         Y = {}
         W = {}
         for task in tasks:
             Y[task] = np.concatenate([samp[1][task] for samp in next_samples])
-            W[task] = np.concatenate([samp[2][task] for samp in next_samples])
+            W[task] = np.array([samp[2][task] for samp in next_samples])
 
         yield (X, Y, W)
 
@@ -219,7 +220,7 @@ def multitask_generator(mtrack_list, json_path=JSON_PATH, data_types=DATA_TYPES,
             for pair in task_pairs[data_type][task]:
                 data_streamers[data_type][task].append(
                     pescador.Streamer(multitask_patch_generator,
-                                      tasks, pair[0], pair[1])
+                                      pair[0], pair[1], tasks)
                 )
 
     # for each data type make a mux
@@ -242,6 +243,7 @@ def multitask_generator(mtrack_list, json_path=JSON_PATH, data_types=DATA_TYPES,
                 task_streams[task].append(data_muxes[data_type][task])
 
     if mux_weights is None:
+        mux_weights = {}
         for task in tasks:
             n_data_types = len(task_streams[task])
             mux_weights[task] = np.ones((n_data_types, )) / float(n_data_types)
