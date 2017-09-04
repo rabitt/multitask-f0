@@ -36,6 +36,8 @@ def main(model, output_path, loss_weights, sample_weight_mode,
     model_save_path = os.path.join(output_path, "model_weights.h5")
     history_plot_path = os.path.join(output_path, "training_history.pdf")
 
+    augment = True
+
     train_generator = MC.multitask_generator(
         data_splits['train'], data_types=data_types,
         tasks=tasks, mux_weights=mux_weights,

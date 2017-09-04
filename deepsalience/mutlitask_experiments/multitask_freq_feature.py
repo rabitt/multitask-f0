@@ -1,4 +1,8 @@
-from .. import multitask_experiment
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import multitask_experiment
 import keras
 from keras.models import Model
 from keras.layers import Dense, Input, Reshape, Lambda, Permute
@@ -99,7 +103,7 @@ def get_model():
 
 
 model = get_model()
-output_path = '../experiment_output/multitask_freq_feature'
+output_path = '../../experiment_output/multitask_freq_feature'
 tasks = None
 data_types = None
 loss_weights = {'multif0': 2.0, 'melody': 1.0, 'bass': 1.0, 'vocal': 1.0}

@@ -260,7 +260,7 @@ def get_test_files(test_set_name):
     return test_files
 
 
-def score_singlef0_on_test_set(model, test_set, task_indices, thresh=0.5, , add_frequency=False):
+def score_singlef0_on_test_set(model, test_set, task_indices, thresh=0.5, add_frequency=False):
     test_files = get_test_files(test_set)
     print("Scoring on {}".format(test_set))
 

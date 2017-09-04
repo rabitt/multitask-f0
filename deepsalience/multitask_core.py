@@ -181,8 +181,13 @@ def multitask_batch_generator(task_generators, tasks):
 
     while True:
         next_samples = [next(iterators[task]) for task in tasks]
+        if isinstance(next_samples[0][0], dict):
+            x_in = np.concatenate([samp[0]['input'] for samp in next_samples])
+            x_fr = np.concatenate([samp[0]['freq_map'] for samp in next_samples])
+            X = {'input': x_in, 'freq_map': x_fr}
+        else:
+            X = np.concatenate([samp[0] for samp in next_samples])
 
-        X = np.concatenate([samp[0] for samp in next_samples])
         Y = {}
         W = {}
         for task in tasks:
@@ -233,6 +238,7 @@ def multitask_generator(mtrack_list, json_path=JSON_PATH, data_types=DATA_TYPES,
                 data_streamers[data_type][task].append(
                     pescador.Streamer(multitask_patch_generator,
                                       pair[0], pair[1], tasks,
+                                      20, (360, 50), 
                                       add_frequency, augment)
                 )
 
