@@ -67,7 +67,7 @@ def get_model():
 
 
 model = get_model()
-output_path = '../experiment_output/multitask_singletask_bass'
+output_path = '../../experiment_output/multitask_singletask_bass'
 tasks = ['bass']
 data_types = None
 loss_weights = {'bass': 1.0}

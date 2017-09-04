@@ -107,7 +107,7 @@ def get_model():
 
 
 model = get_model()
-output_path = '../experiment_output/multitask_base_experiment'
+output_path = '../../experiment_output/multitask_base_experiment'
 tasks = None
 data_types = None
 loss_weights = {'multif0': 2.0, 'melody': 1.0, 'bass': 1.0, 'vocal': 1.0}

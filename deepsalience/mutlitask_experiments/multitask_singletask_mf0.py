@@ -39,7 +39,7 @@ def get_model():
 
 
 model = get_model()
-output_path = '../experiment_output/multitask_singletask_mf0'
+output_path = '../../experiment_output/multitask_singletask_mf0'
 tasks = ['multif0']
 data_types = None
 loss_weights = {'multif0': 2.0}

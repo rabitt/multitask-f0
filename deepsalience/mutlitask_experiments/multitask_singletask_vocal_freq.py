@@ -42,7 +42,7 @@ def get_model():
     y_concat_freq = Concatenate(name='freq_concat')([ya_concat, y_freq])
 
     y_vocal_feat = Conv2D(
-        32, (3, 3), padding='same', activation='relu', name='vocal_filters')(ya_concat) #32
+        32, (3, 3), padding='same', activation='relu', name='vocal_filters')(y_concat_freq) #32
     ya_vocal_feat = BatchNormalization()(y_vocal_feat)
     y_vocal_feat2 = Conv2D(
         32, (3, 3), padding='same', activation='relu', name='vocal_filters2')(ya_vocal_feat) #32
