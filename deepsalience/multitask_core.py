@@ -23,10 +23,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# import compute_training_data as C
-# import experiment_datasets
-# import evaluate
-# import core
 
 DATA_TYPES = ['XA', 'XB', 'XC', 'XD']
 TASKS = ['multif0', 'melody', 'bass', 'vocal']
@@ -94,8 +90,18 @@ def grab_empty_output(n_f, n_t):
     return np.zeros((1, n_f, n_t))
 
 
+def get_freq_feature(n_f, n_t, augment=True):
+    x_freqs = np.repeat(
+        (1./n_f)*np.arange(n_f)[np.newaxis, :], n_t, axis=0
+    ).T[np.newaxis, :, :, np.newaxis]
+    if augment:
+        x_freqs = x_freqs + (np.random.choice(np.arange(-15, 20, 5)) / float(n_f))
+    return x_freqs
+
+
 def multitask_patch_generator(fpath_in, dict_out, tasks, n_samples=20,
-                              input_patch_size=(360, 50)):
+                              input_patch_size=(360, 50), add_frequency=False,
+                              augment=True):
     """Generator that yields an infinite number of patches
        for a single input, output pair
     """
@@ -117,6 +123,11 @@ def multitask_patch_generator(fpath_in, dict_out, tasks, n_samples=20,
         x = grab_patch_input(
             f, t, n_f, n_t, data_in
         )
+
+        if add_frequency:
+            x_freqs = get_freq_feature(n_f, n_t, augment=augment)
+            x = {'input': x, 'freq_map': x_freqs}
+
         y = {}
         w = {}
         for task in tasks:
@@ -199,7 +210,8 @@ def soft_binary_accuracy(y_true, y_pred):
 
 
 def multitask_generator(mtrack_list, json_path=JSON_PATH, data_types=DATA_TYPES,
-                        tasks=TASKS, mux_weights=None):
+                        tasks=TASKS, mux_weights=None, add_frequency=False,
+                        augment=True):
 
     typed_data = get_grouped_data(json_path, mtrack_list)
     task_pairs = get_all_task_pairs(typed_data)
@@ -220,7 +232,8 @@ def multitask_generator(mtrack_list, json_path=JSON_PATH, data_types=DATA_TYPES,
             for pair in task_pairs[data_type][task]:
                 data_streamers[data_type][task].append(
                     pescador.Streamer(multitask_patch_generator,
-                                      pair[0], pair[1], tasks)
+                                      pair[0], pair[1], tasks,
+                                      add_frequency, augment)
                 )
 
     # for each data type make a mux
