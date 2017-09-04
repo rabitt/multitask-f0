@@ -16,6 +16,6 @@ module load ffmpeg/intel/3.2.2
 source ~/.bashrc
 unset XDG_RUNTIME_DIR
 
-cd ~/repos/multif0/deepsalience
+cd ~/repos/multif0/deepsalience/mutlitask_experiments
 
 python multitask_base_experiment.py

@@ -14,7 +14,8 @@ from keras import backend as K
 
 def get_model():
     input_shape = (None, None, 5)
-    y0 = Input(shape=input_shape)
+    y0 = Input(shape=input_shape, name='input')
+    y_freq = Input(shape=(None, None, 1), name='freq_map')
 
     y1_pitch = Conv2D(
         32, (5, 5), padding='same', activation='relu', name='pitch_layer1')(y0)
@@ -38,44 +39,42 @@ def get_model():
 
     y_concat = Concatenate(name='timbre_and_pitch')([y_multif0, y1a_timbre])
     ya_concat = BatchNormalization()(y_concat)
+    y_concat_freq = Concatenate(name='freq_concat')([ya_concat, y_freq])
 
-    y_bass_feat = Conv2D(
-        32, (3, 3), padding='same', activation='relu', name='bass_filters')(ya_concat) #32
-    ya_bass_feat = BatchNormalization()(y_bass_feat)
-    y_bass_feat2 = Conv2D(
-        32, (3, 3), padding='same', activation='relu', name='bass_filters2')(ya_bass_feat) #32
-    ya_bass_feat2 = BatchNormalization()(y_bass_feat2)
-    y_bass_feat3 = Conv2D(
-        8, (240, 1), padding='same', activation='relu', name='bass_filters3')(ya_bass_feat2) #8
-    ya_bass_feat3 = BatchNormalization()(y_bass_feat3)
-    y_bass_feat4 = Conv2D(
-        16, (7, 7), padding='same', activation='relu', name='bass_filters4')(ya_bass_feat3) #16
-    ya_bass_feat4 = BatchNormalization()(y_bass_feat4)
-    y_bass_feat5 = Conv2D(
-        16, (7, 7), padding='same', activation='relu', name='bass_filters5')(ya_bass_feat4) #16
-    ya_bass_feat5 = BatchNormalization()(y_bass_feat5)
+    y_vocal_feat = Conv2D(
+        32, (3, 3), padding='same', activation='relu', name='vocal_filters')(ya_concat) #32
+    ya_vocal_feat = BatchNormalization()(y_vocal_feat)
+    y_vocal_feat2 = Conv2D(
+        32, (3, 3), padding='same', activation='relu', name='vocal_filters2')(ya_vocal_feat) #32
+    ya_vocal_feat2 = BatchNormalization()(y_vocal_feat2)
+    y_vocal_feat4 = Conv2D(
+        16, (7, 7), padding='same', activation='relu', name='vocal_filters4')(ya_vocal_feat2) # 16
+    ya_vocal_feat4 = BatchNormalization()(y_vocal_feat4)
+    y_vocal_feat5 = Conv2D(
+        16, (7, 7), padding='same', activation='relu', name='vocal_filters5')(ya_vocal_feat4) #16
+    ya_vocal_feat5 = BatchNormalization()(y_vocal_feat5)
 
-    y_bass = Conv2D(
-        1, (1, 1), padding='same', activation='sigmoid', name='bass_presqueeze')(ya_bass_feat5)
-    bass = Lambda(lambda x: K.squeeze(x, axis=3), name='bass')(y_bass)
+    y_vocal = Conv2D(
+        1, (1, 1), padding='same', activation='sigmoid', name='vocal_presqueeze')(ya_vocal_feat5)
+    vocal = Lambda(lambda x: K.squeeze(x, axis=3), name='vocal')(y_vocal)
 
-    model = Model(inputs=y0, outputs=[bass])
+    model = Model(inputs=[y0, y_freq], outputs=[vocal])
 
     model.summary(line_length=120)
 
     return model
 
-
 model = get_model()
-output_path = '../experiment_output/multitask_singletask_bass'
-tasks = ['bass']
+output_path = '../experiment_output/multitask_singletask_vocal_freq'
+tasks = ['vocal']
 data_types = None
-loss_weights = {'bass': 1.0}
-sample_weight_mode = {'bass': None}
-task_indices = {'bass': 0}
+loss_weights = {'vocal': 1.0}
+sample_weight_mode = {'vocal': None}
+task_indices = {'vocal': 0}
 
 multitask_experiment.main(
     model, output_path, loss_weights, sample_weight_mode,
     task_indices, data_types=data_types, tasks=tasks, mux_weights=None,
-    samples_per_epoch=50, nb_epochs=200, nb_val_samples=50
+    samples_per_epoch=50, nb_epochs=200, nb_val_samples=50,
+    freq_feature=True
 )

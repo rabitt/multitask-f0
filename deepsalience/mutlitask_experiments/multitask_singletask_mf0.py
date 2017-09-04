@@ -1,4 +1,8 @@
-from .. import multitask_experiment
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import multitask_experiment
 import keras
 from keras.models import Model
 from keras.layers import Dense, Input, Reshape, Lambda, Permute
