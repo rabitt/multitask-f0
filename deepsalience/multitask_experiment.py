@@ -73,6 +73,6 @@ def main(model, output_path, loss_weights, sample_weight_mode,
 
     model.load_weights(model_save_path)
 
-    thresholds, scores = ME.evaluate_model(model, tasks, task_indices)
+    thresholds, scores = ME.evaluate_model(model, tasks, task_indices, add_frequency=freq_feature)
     ME.save_eval(output_path, thresholds, scores)
 
