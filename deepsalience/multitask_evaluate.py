@@ -52,7 +52,7 @@ def get_single_test_prediction(model, npy_file=None, audio_file=None, max_frames
         x_slice = x[:, :, t:t+n_slices, :]
 
         if add_frequency:
-            x_freq = MC.get_freq_feature(n_f, n_slices, augment=False)
+            x_freq = MC.get_freq_feature(n_f, x_slice.shape[2], augment=False)
             x_in = {'input': x_slice, 'freq_map': x_freq}
         else:
             x_in = x_slice
