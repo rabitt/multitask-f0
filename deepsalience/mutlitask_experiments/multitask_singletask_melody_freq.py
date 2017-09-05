@@ -47,8 +47,11 @@ def get_model():
     y_mel_feat2 = Conv2D(
         32, (3, 3), padding='same', activation='relu', name='melody_filters2')(ya_mel_feat)#32
     ya_mel_feat2 = BatchNormalization()(y_mel_feat2)
+    y_mel_feat3 = Conv2D(
+        8, (240, 1), padding='same', activation='relu', name='melody_filters3')(ya_mel_feat2) # 8
+    ya_mel_feat3 = BatchNormalization()(y_mel_feat3)
     y_mel_feat4 = Conv2D(
-        16, (7, 7), padding='same', activation='relu', name='melody_filters4')(ya_mel_feat2) # 16
+        16, (7, 7), padding='same', activation='relu', name='melody_filters4')(ya_mel_feat3) # 16
     ya_mel_feat4 = BatchNormalization()(y_mel_feat4)
     y_mel_feat5 = Conv2D(
         16, (7, 7), padding='same', activation='relu', name='melody_filters5')(ya_mel_feat4) #16

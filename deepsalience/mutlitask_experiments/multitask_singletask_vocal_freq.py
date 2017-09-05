@@ -47,8 +47,11 @@ def get_model():
     y_vocal_feat2 = Conv2D(
         32, (3, 3), padding='same', activation='relu', name='vocal_filters2')(ya_vocal_feat) #32
     ya_vocal_feat2 = BatchNormalization()(y_vocal_feat2)
+    y_vocal_feat3 = Conv2D(
+        8, (240, 1), padding='same', activation='relu', name='vocal_filters3')(ya_vocal_feat2) #8
+    ya_vocal_feat3 = BatchNormalization()(y_vocal_feat3)
     y_vocal_feat4 = Conv2D(
-        16, (7, 7), padding='same', activation='relu', name='vocal_filters4')(ya_vocal_feat2) # 16
+        16, (7, 7), padding='same', activation='relu', name='vocal_filters4')(ya_vocal_feat3) # 16
     ya_vocal_feat4 = BatchNormalization()(y_vocal_feat4)
     y_vocal_feat5 = Conv2D(
         16, (7, 7), padding='same', activation='relu', name='vocal_filters5')(ya_vocal_feat4) #16
