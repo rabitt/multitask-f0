@@ -71,22 +71,6 @@ def get_model():
         16, (7, 7), padding='same', activation='relu', name='bass_filters5')(ya_bass_feat4) #16
     ya_bass_feat5 = BatchNormalization()(y_bass_feat5)
 
-    y_vocal_feat = Conv2D(
-        32, (3, 3), padding='same', activation='relu', name='vocal_filters')(ya_concat) #32
-    ya_vocal_feat = BatchNormalization()(y_vocal_feat)
-    y_vocal_feat2 = Conv2D(
-        32, (3, 3), padding='same', activation='relu', name='vocal_filters2')(ya_vocal_feat) #32
-    ya_vocal_feat2 = BatchNormalization()(y_vocal_feat2)
-    y_vocal_feat3 = Conv2D(
-        8, (240, 1), padding='same', activation='relu', name='vocal_filters3')(ya_vocal_feat2) #8
-    ya_vocal_feat3 = BatchNormalization()(y_vocal_feat3)
-    y_vocal_feat4 = Conv2D(
-        16, (7, 7), padding='same', activation='relu', name='vocal_filters4')(ya_vocal_feat3) # 16
-    ya_vocal_feat4 = BatchNormalization()(y_vocal_feat4)
-    y_vocal_feat5 = Conv2D(
-        16, (7, 7), padding='same', activation='relu', name='vocal_filters5')(ya_vocal_feat4) #16
-    ya_vocal_feat5 = BatchNormalization()(y_vocal_feat5)
-
     y_melody = Conv2D(
         1, (1, 1), padding='same', activation='sigmoid', name='melody_presqueeze')(ya_mel_feat5)
     melody = Lambda(lambda x: K.squeeze(x, axis=3), name='melody')(y_melody)
@@ -95,11 +79,7 @@ def get_model():
         1, (1, 1), padding='same', activation='sigmoid', name='bass_presqueeze')(ya_bass_feat5)
     bass = Lambda(lambda x: K.squeeze(x, axis=3), name='bass')(y_bass)
 
-    y_vocal = Conv2D(
-        1, (1, 1), padding='same', activation='sigmoid', name='vocal_presqueeze')(ya_vocal_feat5)
-    vocal = Lambda(lambda x: K.squeeze(x, axis=3), name='vocal')(y_vocal)
-
-    model = Model(inputs=y0, outputs=[multif0, melody, bass, vocal])
+    model = Model(inputs=y0, outputs=[multif0, melody, bass])
 
     model.summary(line_length=120)
 
@@ -107,12 +87,12 @@ def get_model():
 
 
 model = get_model()
-output_path = '../../experiment_output/multitask_base_experiment'
-tasks = None
+output_path = '../../experiment_output/multitask_mf0_mel_bass'
+tasks = ['multif0', 'melody', 'bass']
 data_types = None
-loss_weights = {'multif0': 2.0, 'melody': 1.0, 'bass': 1.0, 'vocal': 1.0}
-sample_weight_mode = {'multif0': None, 'melody': None, 'bass': None, 'vocal': None}
-task_indices = {'multif0': 0, 'melody': 1, 'bass': 2, 'vocal': 3}
+loss_weights = {'multif0': 2.0, 'melody': 1.0, 'bass': 1.0}
+sample_weight_mode = {'multif0': None, 'melody': None, 'bass': None}
+task_indices = {'multif0': 0, 'melody': 1, 'bass': 2}
 
 multitask_experiment.main(
     model, output_path, loss_weights, sample_weight_mode,
