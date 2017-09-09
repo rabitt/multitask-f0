@@ -78,12 +78,12 @@ def grab_patch_output(f, t, n_f, n_t, y_data):
     return y_data[f: f + n_f, t: t + n_t][np.newaxis, :, :]
 
 
-def grab_patch_input(f, t, n_f, n_t, x_data):
+def grab_patch_input(f, t, n_f, n_t, x_data, n_harms=5):
     """Get a time-frequency patch from an input file
     """
     return np.transpose(
         x_data[:, f: f + n_f, t: t + n_t], (1, 2, 0)
-    )[np.newaxis, :, :, :]
+    )[np.newaxis, :, :, :n_harms]
 
 
 def grab_empty_output(n_f, n_t):
@@ -101,7 +101,7 @@ def get_freq_feature(n_f, n_t, augment=True):
 
 def multitask_patch_generator(fpath_in, dict_out, tasks, n_samples=20,
                               input_patch_size=(360, 50), add_frequency=False,
-                              augment=True):
+                              augment=True, n_harms=5):
     """Generator that yields an infinite number of patches
        for a single input, output pair
     """
@@ -121,7 +121,7 @@ def multitask_patch_generator(fpath_in, dict_out, tasks, n_samples=20,
         t = np.random.randint(0, n_times - n_t)
 
         x = grab_patch_input(
-            f, t, n_f, n_t, data_in
+            f, t, n_f, n_t, data_in, n_harms
         )
 
         if add_frequency:
@@ -221,7 +221,7 @@ def soft_binary_accuracy(y_true, y_pred):
 
 def multitask_generator(mtrack_list, json_path=JSON_PATH, data_types=DATA_TYPES,
                         tasks=TASKS, mux_weights=None, add_frequency=False,
-                        augment=True):
+                        augment=True, n_harms=5):
 
     typed_data = get_grouped_data(json_path, mtrack_list)
     task_pairs = get_all_task_pairs(typed_data)
@@ -254,7 +254,8 @@ def multitask_generator(mtrack_list, json_path=JSON_PATH, data_types=DATA_TYPES,
                     pescador.Streamer(multitask_patch_generator,
                                       pair[0], pair[1], tasks,
                                       20, (360, 50), 
-                                      add_frequency, augment)
+                                      add_frequency, augment,
+                                      n_harms)
                 )
 
     # for each data type make a mux

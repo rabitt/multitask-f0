@@ -20,7 +20,7 @@ VALIDATION_DIR = os.path.join(
 
 
 def get_single_test_prediction(model, npy_file=None, audio_file=None, max_frames=None,
-                               add_frequency=False):
+                               add_frequency=False, n_harms=5):
     """Generate output from a model given an input numpy file
     """
     if npy_file is not None:
@@ -55,7 +55,7 @@ def get_single_test_prediction(model, npy_file=None, audio_file=None, max_frames
             x_freq = MC.get_freq_feature(n_f, x_slice.shape[2], augment=False)
             x_in = {'input': x_slice, 'freq_map': x_freq}
         else:
-            x_in = x_slice
+            x_in = x_slice[:, :, :, :n_harms]
 
         prediction = model.predict(x_in)
 
@@ -153,7 +153,8 @@ def time_freq_fill_zeros(times, freqs, hop):
     return t_uniform, freq_array
 
 
-def get_best_thresh_multif0(model, task_indices, task='multif0', add_frequency=False):
+def get_best_thresh_multif0(model, task_indices, task='multif0', add_frequency=False,
+                            n_harms=5):
     """Use validation set to get the best threshold value
     """
     # get validation files
@@ -167,7 +168,9 @@ def get_best_thresh_multif0(model, task_indices, task='multif0', add_frequency=F
 
         # generate prediction on numpy file
         predicted_outputs, _ = \
-            get_single_test_prediction(model, npy_file=npy_file, add_frequency=add_frequency)
+            get_single_test_prediction(
+                model, npy_file=npy_file, add_frequency=add_frequency,
+                n_harms=n_harms)
         predicted_output = predicted_outputs[task_indices[task]]
 
         # load ground truth labels
@@ -195,7 +198,8 @@ def get_best_thresh_multif0(model, task_indices, task='multif0', add_frequency=F
     return best_thresh
 
 
-def get_best_thresh_singlef0(model, task, task_indices, add_frequency=False):
+def get_best_thresh_singlef0(model, task, task_indices, add_frequency=False,
+                             n_harms=n_harms):
     thresh_vals = np.arange(0, 1, 0.1)
     mel_accuracy = {v: [] for v in thresh_vals}
 
@@ -206,7 +210,9 @@ def get_best_thresh_singlef0(model, task, task_indices, add_frequency=False):
         print("    > {} / {}".format(i + 1, n_validation))
         # generate prediction on numpy file
         predicted_outputs, _ = \
-            get_single_test_prediction(model, npy_file=npy_file, add_frequency=add_frequency)
+            get_single_test_prediction(
+                model, npy_file=npy_file, add_frequency=add_frequency,
+                n_harms=n_harms)
 
         predicted_output = predicted_outputs[task_indices[task]]
 
@@ -260,7 +266,8 @@ def get_test_files(test_set_name):
     return test_files
 
 
-def score_singlef0_on_test_set(model, test_set, task_indices, thresh=0.5, add_frequency=False):
+def score_singlef0_on_test_set(model, test_set, task_indices, thresh=0.5,
+                               add_frequency=False, n_harms=5):
     test_files = get_test_files(test_set)
     print("Scoring on {}".format(test_set))
 
@@ -285,7 +292,9 @@ def score_singlef0_on_test_set(model, test_set, task_indices, thresh=0.5, add_fr
         print("    > {} / {}".format(i + 1, n_test_files))
         # generate prediction on numpy file
         predicted_outputs, _ = \
-            get_single_test_prediction(model, npy_file=npy_file, add_frequency=add_frequency)
+            get_single_test_prediction(
+                model, npy_file=npy_file, add_frequency=add_frequency,
+                n_harms=n_harms)
         predicted_output = predicted_outputs[task_idx]
 
         file_keys = os.path.basename(npy_file).split('.')[0]
@@ -307,7 +316,8 @@ def score_singlef0_on_test_set(model, test_set, task_indices, thresh=0.5, add_fr
     return df
 
 
-def score_multif0_on_test_set(model, test_set, task_indices, thresh=0.5, add_frequency=False):
+def score_multif0_on_test_set(model, test_set, task_indices, thresh=0.5, add_frequency=False,
+                              n_harms=5):
     """score a model on all files in a named test set
     """
 
@@ -325,7 +335,9 @@ def score_multif0_on_test_set(model, test_set, task_indices, thresh=0.5, add_fre
 
         # generate prediction on numpy file
         predicted_outputs, _ = \
-            get_single_test_prediction(model, npy_file=npy_file, add_frequency=add_frequency)
+            get_single_test_prediction(
+                model, npy_file=npy_file, add_frequency=add_frequency,
+                n_harms=n_harms)
 
         predicted_output = predicted_outputs[task_idx]
         # get multif0 output from prediction
@@ -348,7 +360,8 @@ def score_multif0_on_test_set(model, test_set, task_indices, thresh=0.5, add_fre
     return df
 
 
-def evaluate_model(model, tasks, task_indices, add_frequency=False):
+def evaluate_model(model, tasks, task_indices, add_frequency=False,
+                   n_harms=5):
 
     thresholds = {}
     scores = {}
@@ -357,17 +370,21 @@ def evaluate_model(model, tasks, task_indices, add_frequency=False):
     if 'multif0' in tasks:
         print("    > Getting best threshold...")
         best_thresh_mf0 = get_best_thresh_multif0(
-            model, task_indices, add_frequency=add_frequency)
+            model, task_indices, add_frequency=add_frequency, n_harms=n_harms)
         thresholds['multif0'] = best_thresh_mf0
 
         df_bach10 = score_multif0_on_test_set(
-            model, 'bach10', task_indices, best_thresh_mf0, add_frequency=add_frequency)
+            model, 'bach10', task_indices, best_thresh_mf0,
+            add_frequency=add_frequency, n_harms=n_harms)
         df_maps = score_multif0_on_test_set(
-            model, 'maps', task_indices, best_thresh_mf0, add_frequency=add_frequency)
+            model, 'maps', task_indices, best_thresh_mf0,
+            add_frequency=add_frequency, n_harms=n_harms)
         df_mdb_mf0 = score_multif0_on_test_set(
-            model, 'medleydb_multif0', task_indices, best_thresh_mf0, add_frequency=add_frequency)
+            model, 'medleydb_multif0', task_indices, best_thresh_mf0,
+            add_frequency=add_frequency, n_harms=n_harms)
         df_su = score_multif0_on_test_set(
-            model, 'su', task_indices, best_thresh_mf0, add_frequency=add_frequency)
+            model, 'su', task_indices, best_thresh_mf0,
+            add_frequency=add_frequency, n_harms=n_harms)
 
         scores['bach10'] = df_bach10
         scores['maps'] = df_maps
@@ -377,15 +394,19 @@ def evaluate_model(model, tasks, task_indices, add_frequency=False):
     if 'melody' in tasks:
         print("    > Getting best threshold...")
         best_thresh_mel = get_best_thresh_singlef0(
-            model, 'melody', task_indices, add_frequency=add_frequency)
+            model, 'melody', task_indices, add_frequency=add_frequency,
+            n_harms=n_harms)
         thresholds['melody'] = best_thresh_mel
 
         df_mdb_mel = score_singlef0_on_test_set(
-            model, 'medleydb_melody', task_indices, best_thresh_mel, add_frequency=add_frequency)
+            model, 'medleydb_melody', task_indices, best_thresh_mel,
+            add_frequency=add_frequency, n_harms=n_harms)
         df_orchset = score_singlef0_on_test_set(
-            model, 'orchset', task_indices, best_thresh_mel, add_frequency=add_frequency)
+            model, 'orchset', task_indices, best_thresh_mel,
+            add_frequency=add_frequency, n_harms=n_harms)
         df_wj_mel = score_singlef0_on_test_set(
-            model, 'weimar_jazz_melody', task_indices, best_thresh_mel, add_frequency=add_frequency)
+            model, 'weimar_jazz_melody', task_indices, best_thresh_mel,
+            add_frequency=add_frequency, n_harms=n_harms)
 
         scores['mdb_mel'] = df_mdb_mel
         scores['orchset'] = df_orchset
@@ -394,23 +415,27 @@ def evaluate_model(model, tasks, task_indices, add_frequency=False):
     if 'bass' in tasks:
         print("    > Getting best threshold...")
         best_thresh_bass = get_best_thresh_singlef0(
-            model, 'bass', task_indices, add_frequency=add_frequency)
+            model, 'bass', task_indices, add_frequency=add_frequency,
+            n_harms=n_harms)
         thresholds['bass'] = best_thresh_bass
 
         df_wj_bass = score_singlef0_on_test_set(
-            model, 'weimar_jazz_bass', task_indices, best_thresh_bass, add_frequency=add_frequency)
+            model, 'weimar_jazz_bass', task_indices, best_thresh_bass,
+            add_frequency=add_frequency, n_harms=n_harms)
 
         scores['wj_bass'] = df_wj_bass
 
     if 'vocal' in tasks:
         print("    > Getting best threshold...")
         best_thresh_vocal = get_best_thresh_singlef0(
-            model, 'vocal', task_indices, add_frequency=add_frequency)
+            model, 'vocal', task_indices, add_frequency=add_frequency,
+            n_harms=n_harms)
 
         thresholds['vocal'] = best_thresh_vocal
 
         df_ikala = score_singlef0_on_test_set(
-            model, 'ikala', task_indices, best_thresh_vocal, add_frequency=add_frequency)
+            model, 'ikala', task_indices, best_thresh_vocal,
+            add_frequency=add_frequency, n_harms=n_harms)
 
         scores['ikala'] = df_ikala
 

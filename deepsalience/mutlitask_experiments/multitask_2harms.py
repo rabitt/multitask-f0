@@ -13,7 +13,7 @@ from keras.layers.normalization import BatchNormalization
 from keras import backend as K
 
 def get_model():
-    input_shape = (None, None, 5)
+    input_shape = (None, None, 2)
     y0 = Input(shape=input_shape)
 
     y1_pitch = Conv2D(
@@ -87,38 +87,6 @@ def get_model():
         16, (7, 7), padding='same', activation='relu', name='vocal_filters5')(ya_vocal_feat4) #16
     ya_vocal_feat5 = BatchNormalization()(y_vocal_feat5)
 
-    y_piano_feat = Conv2D(
-        32, (3, 3), padding='same', activation='relu', name='piano_filters')(ya_concat) #32
-    ya_piano_feat = BatchNormalization()(y_piano_feat)
-    y_piano_feat2 = Conv2D(
-        32, (3, 3), padding='same', activation='relu', name='piano_filters2')(ya_piano_feat) #32
-    ya_piano_feat2 = BatchNormalization()(y_piano_feat2)
-    y_piano_feat3 = Conv2D(
-        8, (240, 1), padding='same', activation='relu', name='piano_filters3')(ya_piano_feat2) #8
-    ya_piano_feat3 = BatchNormalization()(y_piano_feat3)
-    y_piano_feat4 = Conv2D(
-        16, (7, 7), padding='same', activation='relu', name='piano_filters4')(ya_piano_feat3) # 16
-    ya_piano_feat4 = BatchNormalization()(y_piano_feat4)
-    y_piano_feat5 = Conv2D(
-        16, (7, 7), padding='same', activation='relu', name='piano_filters5')(ya_piano_feat4) #16
-    ya_piano_feat5 = BatchNormalization()(y_piano_feat5)
-
-    y_guitar_feat = Conv2D(
-        32, (3, 3), padding='same', activation='relu', name='guitar_filters')(ya_concat) #32
-    ya_guitar_feat = BatchNormalization()(y_guitar_feat)
-    y_guitar_feat2 = Conv2D(
-        32, (3, 3), padding='same', activation='relu', name='guitar_filters2')(ya_guitar_feat) #32
-    ya_guitar_feat2 = BatchNormalization()(y_guitar_feat2)
-    y_guitar_feat3 = Conv2D(
-        8, (240, 1), padding='same', activation='relu', name='guitar_filters3')(ya_guitar_feat2) #8
-    ya_guitar_feat3 = BatchNormalization()(y_guitar_feat3)
-    y_guitar_feat4 = Conv2D(
-        16, (7, 7), padding='same', activation='relu', name='guitar_filters4')(ya_guitar_feat3) # 16
-    ya_guitar_feat4 = BatchNormalization()(y_guitar_feat4)
-    y_guitar_feat5 = Conv2D(
-        16, (7, 7), padding='same', activation='relu', name='guitar_filters5')(ya_guitar_feat4) #16
-    ya_guitar_feat5 = BatchNormalization()(y_guitar_feat5)
-
     y_melody = Conv2D(
         1, (1, 1), padding='same', activation='sigmoid', name='melody_presqueeze')(ya_mel_feat5)
     melody = Lambda(lambda x: K.squeeze(x, axis=3), name='melody')(y_melody)
@@ -131,15 +99,7 @@ def get_model():
         1, (1, 1), padding='same', activation='sigmoid', name='vocal_presqueeze')(ya_vocal_feat5)
     vocal = Lambda(lambda x: K.squeeze(x, axis=3), name='vocal')(y_vocal)
 
-    y_piano = Conv2D(
-        1, (1, 1), padding='same', activation='sigmoid', name='piano_presqueeze')(ya_piano_feat5)
-    piano = Lambda(lambda x: K.squeeze(x, axis=3), name='piano')(y_piano)
-
-    y_guitar = Conv2D(
-        1, (1, 1), padding='same', activation='sigmoid', name='guitar_presqueeze')(ya_guitar_feat5)
-    guitar = Lambda(lambda x: K.squeeze(x, axis=3), name='guitar')(y_guitar)
-
-    model = Model(inputs=y0, outputs=[multif0, melody, bass, vocal, piano, guitar])
+    model = Model(inputs=y0, outputs=[multif0, melody, bass, vocal])
 
     model.summary(line_length=120)
 
@@ -147,22 +107,16 @@ def get_model():
 
 
 model = get_model()
-output_path = '../../experiment_output/multitask_all_plus_piano_guitar'
-tasks = ['multif0', 'melody', 'bass', 'vocal', 'piano', 'guitar']
+output_path = '../../experiment_output/multitask_2harms'
+tasks = None
 data_types = None
-loss_weights = {
-    'multif0': 2.0, 'melody': 1.0, 'bass': 1.0, 'vocal': 1.0,
-    'piano': 1.0, 'guitar': 1.0}
-sample_weight_mode = {
-    'multif0': None, 'melody': None, 'bass': None, 'vocal': None,
-    'piano': None, 'guitar': None}
-task_indices = {
-    'multif0': 0, 'melody': 1, 'bass': 2, 'vocal': 3,
-    'piano': 4, 'guitar': 5}
+loss_weights = {'multif0': 2.0, 'melody': 1.0, 'bass': 1.0, 'vocal': 1.0}
+sample_weight_mode = {'multif0': None, 'melody': None, 'bass': None, 'vocal': None}
+task_indices = {'multif0': 0, 'melody': 1, 'bass': 2, 'vocal': 3}
 
 multitask_experiment.main(
     model, output_path, loss_weights, sample_weight_mode,
     task_indices, data_types=data_types, tasks=tasks, mux_weights=None,
     samples_per_epoch=50, nb_epochs=200, nb_val_samples=50,
-    freq_feature=False
+    freq_feature=False, n_harms=2
 )

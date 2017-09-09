@@ -11,7 +11,7 @@ import os
 def main(model, output_path, loss_weights, sample_weight_mode,
          task_indices, data_types=None, tasks=None, mux_weights=None,
          samples_per_epoch=50, nb_epochs=200, nb_val_samples=10,
-         freq_feature=False):
+         freq_feature=False, n_harms=5):
 
     data_splits = MC.load_data_splits()
 
@@ -41,15 +41,18 @@ def main(model, output_path, loss_weights, sample_weight_mode,
     train_generator = MC.multitask_generator(
         data_splits['train'], data_types=data_types,
         tasks=tasks, mux_weights=mux_weights,
-        add_frequency=freq_feature, augment=augment)
+        add_frequency=freq_feature, augment=augment,
+        n_harms=n_harms)
     validate_generator = MC.multitask_generator(
         data_splits['validate'], data_types=data_types,
         tasks=tasks, mux_weights=mux_weights,
-        add_frequency=freq_feature, augment=augment)
+        add_frequency=freq_feature, augment=augment,
+        n_harms=n_harms)
     test_generator = MC.multitask_generator(
         data_splits['test'], data_types=data_types,
         tasks=tasks, mux_weights=mux_weights,
-        add_frequency=freq_feature, augment=augment)
+        add_frequency=freq_feature, augment=augment,
+        n_harms=n_harms)
 
     model.compile(
         loss=MC.bkld, metrics=['mse', MC.soft_binary_accuracy],
@@ -73,6 +76,8 @@ def main(model, output_path, loss_weights, sample_weight_mode,
 
     model.load_weights(model_save_path)
 
-    thresholds, scores = ME.evaluate_model(model, tasks, task_indices, add_frequency=freq_feature)
+    thresholds, scores = ME.evaluate_model(
+        model, tasks, task_indices, add_frequency=freq_feature,
+        n_harms=n_harms)
     ME.save_eval(output_path, thresholds, scores)
 
