@@ -164,11 +164,15 @@ def get_all_task_pairs(typed_data):
         melody_pairs = get_task_pairs(data_list, 'melody')
         bass_pairs = get_task_pairs(data_list, 'bass')
         vocal_pairs = get_task_pairs(data_list, 'vocal')
+        piano_pairs = get_task_pairs(data_list, 'piano')
+        guitar_pairs = get_task_pairs(data_list, 'guitar')
         task_pairs[data_type] = {
             'multif0': multif0_pairs,
             'melody': melody_pairs,
             'bass': bass_pairs,
-            'vocal': vocal_pairs
+            'vocal': vocal_pairs,
+            'piano': piano_pairs,
+            'guitar': guitar_pairs
         }
     return task_pairs
 
@@ -183,7 +187,8 @@ def multitask_batch_generator(task_generators, tasks):
         next_samples = [next(iterators[task]) for task in tasks]
         if isinstance(next_samples[0][0], dict):
             x_in = np.concatenate([samp[0]['input'] for samp in next_samples])
-            x_fr = np.concatenate([samp[0]['freq_map'] for samp in next_samples])
+            x_fr = np.concatenate(
+                [samp[0]['freq_map'] for samp in next_samples])
             X = {'input': x_in, 'freq_map': x_fr}
         else:
             X = np.concatenate([samp[0] for samp in next_samples])
@@ -227,6 +232,16 @@ def multitask_generator(mtrack_list, json_path=JSON_PATH, data_types=DATA_TYPES,
         if data_type == 'XA':
             data_streamers[data_type] = {
                 'melody': [], 'bass': [], 'vocal': []
+            }
+        elif data_type == 'XB':
+            data_streamers[data_type] = {
+                'multif0': [], 'melody': [], 'bass': [], 'vocal': [],
+                'piano': [], 'guitar': []
+            }
+        elif data_type == 'XC':
+            data_streamers[data_type] = {
+                'multif0': [], 'melody': [], 'bass': [], 'vocal': [],
+                'piano': []
             }
         else:
             data_streamers[data_type] = {
