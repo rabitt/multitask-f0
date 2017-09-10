@@ -199,7 +199,7 @@ def get_best_thresh_multif0(model, task_indices, task='multif0', add_frequency=F
 
 
 def get_best_thresh_singlef0(model, task, task_indices, add_frequency=False,
-                             n_harms=n_harms):
+                             n_harms=5):
     thresh_vals = np.arange(0, 1, 0.1)
     mel_accuracy = {v: [] for v in thresh_vals}
 
