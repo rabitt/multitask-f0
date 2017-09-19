@@ -105,18 +105,19 @@ def get_model():
 
     return model
 
+if __name__ == "__main__":
 
-model = get_model()
-output_path = '../../experiment_output/multitask_base_experiment'
-tasks = None
-data_types = None
-loss_weights = {'multif0': 2.0, 'melody': 1.0, 'bass': 1.0, 'vocal': 1.0}
-sample_weight_mode = {'multif0': None, 'melody': None, 'bass': None, 'vocal': None}
-task_indices = {'multif0': 0, 'melody': 1, 'bass': 2, 'vocal': 3}
+    model = get_model()
+    output_path = '../../experiment_output/multitask_base_experiment'
+    tasks = None
+    data_types = None
+    loss_weights = {'multif0': 2.0, 'melody': 1.0, 'bass': 1.0, 'vocal': 1.0}
+    sample_weight_mode = {'multif0': None, 'melody': None, 'bass': None, 'vocal': None}
+    task_indices = {'multif0': 0, 'melody': 1, 'bass': 2, 'vocal': 3}
 
-multitask_experiment.main(
-    model, output_path, loss_weights, sample_weight_mode,
-    task_indices, data_types=data_types, tasks=tasks, mux_weights=None,
-    samples_per_epoch=50, nb_epochs=200, nb_val_samples=50,
-    freq_feature=False
-)
+    multitask_experiment.main(
+        model, output_path, loss_weights, sample_weight_mode,
+        task_indices, data_types=data_types, tasks=tasks, mux_weights=None,
+        samples_per_epoch=50, nb_epochs=200, nb_val_samples=50,
+        freq_feature=False
+    )
