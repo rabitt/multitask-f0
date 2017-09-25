@@ -253,7 +253,7 @@ def get_test_files(test_set_name):
     npy_files = glob.glob(os.path.join(test_dir, "*.npy"))
     test_files = []
     for npy_file in npy_files:
-        if test_set_name == 'maps':
+        if test_set_name in ['maps', 'orchset']:
             trackid = '_'.join(
                 os.path.basename(npy_file).split('.')[0].split('_')[:3])
         else:
