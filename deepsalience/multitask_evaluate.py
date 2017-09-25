@@ -381,16 +381,16 @@ def evaluate_model(model, tasks, task_indices, add_frequency=False,
             thresholds['multif0'] = best_thresh_mf0
 
         df_bach10 = score_multif0_on_test_set(
-            model, 'bach10', task_indices, best_thresh_mf0,
+            model, 'bach10', task_indices, thresholds['multif0'],
             add_frequency=add_frequency, n_harms=n_harms)
         df_maps = score_multif0_on_test_set(
-            model, 'maps', task_indices, best_thresh_mf0,
+            model, 'maps', task_indices, thresholds['multif0'],
             add_frequency=add_frequency, n_harms=n_harms)
         df_mdb_mf0 = score_multif0_on_test_set(
-            model, 'medleydb_multif0', task_indices, best_thresh_mf0,
+            model, 'medleydb_multif0', task_indices, thresholds['multif0'],
             add_frequency=add_frequency, n_harms=n_harms)
         df_su = score_multif0_on_test_set(
-            model, 'su', task_indices, best_thresh_mf0,
+            model, 'su', task_indices, thresholds['multif0'],
             add_frequency=add_frequency, n_harms=n_harms)
 
         scores['bach10'] = df_bach10
@@ -407,13 +407,13 @@ def evaluate_model(model, tasks, task_indices, add_frequency=False,
             thresholds['melody'] = best_thresh_mel
 
         df_mdb_mel = score_singlef0_on_test_set(
-            model, 'medleydb_melody', task_indices, best_thresh_mel,
+            model, 'medleydb_melody', task_indices, thresholds['melody'],
             add_frequency=add_frequency, n_harms=n_harms)
         df_orchset = score_singlef0_on_test_set(
-            model, 'orchset', task_indices, best_thresh_mel,
+            model, 'orchset', task_indices, thresholds['melody'],
             add_frequency=add_frequency, n_harms=n_harms)
         df_wj_mel = score_singlef0_on_test_set(
-            model, 'weimar_jazz_melody', task_indices, best_thresh_mel,
+            model, 'weimar_jazz_melody', task_indices, thresholds['melody'],
             add_frequency=add_frequency, n_harms=n_harms)
 
         scores['mdb_mel'] = df_mdb_mel
@@ -429,7 +429,7 @@ def evaluate_model(model, tasks, task_indices, add_frequency=False,
             thresholds['bass'] = best_thresh_bass
 
         df_wj_bass = score_singlef0_on_test_set(
-            model, 'weimar_jazz_bass', task_indices, best_thresh_bass,
+            model, 'weimar_jazz_bass', task_indices, thresholds['bass'],
             add_frequency=add_frequency, n_harms=n_harms)
 
         scores['wj_bass'] = df_wj_bass
@@ -444,7 +444,7 @@ def evaluate_model(model, tasks, task_indices, add_frequency=False,
             thresholds['vocal'] = best_thresh_vocal
 
         df_ikala = score_singlef0_on_test_set(
-            model, 'ikala', task_indices, best_thresh_vocal,
+            model, 'ikala', task_indices, thresholds['vocal'],
             add_frequency=add_frequency, n_harms=n_harms)
 
         scores['ikala'] = df_ikala
