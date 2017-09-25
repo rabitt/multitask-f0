@@ -253,8 +253,12 @@ def get_test_files(test_set_name):
     npy_files = glob.glob(os.path.join(test_dir, "*.npy"))
     test_files = []
     for npy_file in npy_files:
-        trackid = '_'.join(
-            os.path.basename(npy_file).split('.')[0].split('_')[:2])
+        if test_set_name == 'maps':
+            trackid = '_'.join(
+                os.path.basename(npy_file).split('.')[0].split('_')[:3])
+        else:
+            trackid = '_'.join(
+                os.path.basename(npy_file).split('.')[0].split('_')[:2])
         txt_file = glob.glob(
             os.path.join(test_dir, "{}*.{}".format(trackid, extension)))
         if len(txt_file) > 0:
