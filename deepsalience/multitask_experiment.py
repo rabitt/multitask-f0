@@ -6,6 +6,7 @@ import multitask_core as MC
 import multitask_evaluate as ME
 import keras
 import os
+import json
 
 
 def main(model, output_path, loss_weights, sample_weight_mode,
