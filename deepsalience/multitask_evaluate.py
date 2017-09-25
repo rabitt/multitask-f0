@@ -365,17 +365,20 @@ def score_multif0_on_test_set(model, test_set, task_indices, thresh=0.5, add_fre
 
 
 def evaluate_model(model, tasks, task_indices, add_frequency=False,
-                   n_harms=5):
+                   n_harms=5, thresholds=None):
 
-    thresholds = {}
+    if thresholds is None:
+        thresholds = {}
+
     scores = {}
 
     print("Computing Multif0 Metrics...")
     if 'multif0' in tasks:
-        print("    > Getting best threshold...")
-        best_thresh_mf0 = get_best_thresh_multif0(
-            model, task_indices, add_frequency=add_frequency, n_harms=n_harms)
-        thresholds['multif0'] = best_thresh_mf0
+        if 'multif0' not in thresholds.keys():
+            print("    > Getting best threshold...")
+            best_thresh_mf0 = get_best_thresh_multif0(
+                model, task_indices, add_frequency=add_frequency, n_harms=n_harms)
+            thresholds['multif0'] = best_thresh_mf0
 
         df_bach10 = score_multif0_on_test_set(
             model, 'bach10', task_indices, best_thresh_mf0,
@@ -396,11 +399,12 @@ def evaluate_model(model, tasks, task_indices, add_frequency=False,
         scores['su'] = df_su
 
     if 'melody' in tasks:
-        print("    > Getting best threshold...")
-        best_thresh_mel = get_best_thresh_singlef0(
-            model, 'melody', task_indices, add_frequency=add_frequency,
-            n_harms=n_harms)
-        thresholds['melody'] = best_thresh_mel
+        if 'melody' not in thresholds.keys():
+            print("    > Getting best threshold...")
+            best_thresh_mel = get_best_thresh_singlef0(
+                model, 'melody', task_indices, add_frequency=add_frequency,
+                n_harms=n_harms)
+            thresholds['melody'] = best_thresh_mel
 
         df_mdb_mel = score_singlef0_on_test_set(
             model, 'medleydb_melody', task_indices, best_thresh_mel,
@@ -417,11 +421,12 @@ def evaluate_model(model, tasks, task_indices, add_frequency=False,
         scores['wj_mel'] = df_wj_mel
 
     if 'bass' in tasks:
-        print("    > Getting best threshold...")
-        best_thresh_bass = get_best_thresh_singlef0(
-            model, 'bass', task_indices, add_frequency=add_frequency,
-            n_harms=n_harms)
-        thresholds['bass'] = best_thresh_bass
+        if 'bass' not in thresholds.keys():
+            print("    > Getting best threshold...")
+            best_thresh_bass = get_best_thresh_singlef0(
+                model, 'bass', task_indices, add_frequency=add_frequency,
+                n_harms=n_harms)
+            thresholds['bass'] = best_thresh_bass
 
         df_wj_bass = score_singlef0_on_test_set(
             model, 'weimar_jazz_bass', task_indices, best_thresh_bass,
@@ -430,12 +435,13 @@ def evaluate_model(model, tasks, task_indices, add_frequency=False,
         scores['wj_bass'] = df_wj_bass
 
     if 'vocal' in tasks:
-        print("    > Getting best threshold...")
-        best_thresh_vocal = get_best_thresh_singlef0(
-            model, 'vocal', task_indices, add_frequency=add_frequency,
-            n_harms=n_harms)
+        if 'vocal' not in thresholds.keys():
+            print("    > Getting best threshold...")
+            best_thresh_vocal = get_best_thresh_singlef0(
+                model, 'vocal', task_indices, add_frequency=add_frequency,
+                n_harms=n_harms)
 
-        thresholds['vocal'] = best_thresh_vocal
+            thresholds['vocal'] = best_thresh_vocal
 
         df_ikala = score_singlef0_on_test_set(
             model, 'ikala', task_indices, best_thresh_vocal,

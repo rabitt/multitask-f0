@@ -76,8 +76,15 @@ def main(model, output_path, loss_weights, sample_weight_mode,
 
     model.load_weights(model_save_path)
 
+    threshold_path = os.path.join(
+        output_path, 'evaluation', 'thresholds.json')
+    if os.path.exists(threshold_path):
+        thresholds = json.load(threshold_path)
+    else:
+        thresholds = None
+
     thresholds, scores = ME.evaluate_model(
         model, tasks, task_indices, add_frequency=freq_feature,
-        n_harms=n_harms)
+        n_harms=n_harms, thresholds=thresholds)
     ME.save_eval(output_path, thresholds, scores)
 
