@@ -80,7 +80,8 @@ def main(model, output_path, loss_weights, sample_weight_mode,
     threshold_path = os.path.join(
         output_path, 'evaluation', 'thresholds.json')
     if os.path.exists(threshold_path):
-        thresholds = json.load(threshold_path)
+	with open(threshold_path, 'r') as fhandle:
+        	thresholds = json.load(fhandle)
     else:
         thresholds = None
 
