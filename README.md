@@ -1,2 +1,2 @@
-# multif0
-multi-f0 tracking with deep learning
+# multitask-f0
+Experiments on multitask learning for f0 estimation.
