@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import argparse
+import csv
 import glob
 import json
 import medleydb as mdb
@@ -12,7 +13,6 @@ import numpy as np
 import os
 
 import compute_training_data as C
-from evaluate import save_singlef0_output
 
 
 EXCEPTIONS = {
@@ -29,6 +29,14 @@ EXCEPTIONS = {
     'TheAllmanBrothersBand_RamblinMan_STEM_06': 'clean electric guitar',
     'TheLastGoodnight_PicturesOfYou_STEM_02': 'distorted_electric guitar'
 }
+
+
+def save_singlef0_output(times, freqs, output_path):
+    """save singlef0 output to a csv file."""
+    with open(output_path, 'w') as fhandle:
+        csv_writer = csv.writer(fhandle, delimiter='\t')
+        for t, f in zip(times, freqs):
+            csv_writer.writerow([t, f])
 
 
 def multif0_to_timefreq(times, freqs):
